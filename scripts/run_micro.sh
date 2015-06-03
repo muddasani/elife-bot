@@ -6,6 +6,6 @@
 # Run from the parent directory with "./scripts/run_micro.sh"
 alias ..='cd ..'
 sudo python decider.py -f 3 &
-sudo python decider.py -f 3 -e live &
+sudo python decider.py -f 3 -e $1 &
 sudo python worker.py -f 5 &
-sudo python worker.py -f 5 -e live &
+sudo python worker.py -f 5 -e $1 &
