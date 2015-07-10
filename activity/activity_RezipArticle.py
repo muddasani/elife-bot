@@ -100,8 +100,11 @@ class activity_RezipArticle(activity.activity):
             zip_file_name = self.new_zip_filename(self.journal, fid, status, version)
             self.create_new_zip(zip_file_name)
             
-            # Clean up
+            # Partial clean up
             self.clean_directories()
+            
+        # Full Clean up
+        self.clean_directories(full = True)
             
         
         # Return the activity result, True or False
@@ -605,10 +608,12 @@ class activity_RezipArticle(activity.activity):
             
         new_zipfile.close()
     
-    def clean_directories(self):
+    def clean_directories(self, full = False):
         """
         Deletes all the files from the activity directories
         in order to save on disk space immediately
+        A full clean is only after all activities have finished,
+        a non-full clean can be done after each article
         """
         for file in self.file_list(self.TMP_DIR):
             os.remove(file)
@@ -616,11 +621,13 @@ class activity_RezipArticle(activity.activity):
             os.remove(file)
         for file in self.file_list(self.JUNK_DIR):
             os.remove(file)
-        for file in self.file_list(self.ZIP_DIR):
-            os.remove(file)
-        for folder in self.folder_list(self.INPUT_DIR):
-            for file in self.file_list(folder):
+
+        if full is True:
+            for file in self.file_list(self.ZIP_DIR):
                 os.remove(file)
+            for folder in self.folder_list(self.INPUT_DIR):
+                for file in self.file_list(folder):
+                    os.remove(file)
 
     
     def profile_article(self, input_dir, folder):
