@@ -57,6 +57,8 @@ class activity_RezipArticle(activity.activity):
        
         # Bucket settings
         self.output_bucket = "elife-articles-renamed"
+        # Temporarily upload to a folder during development
+        self.output_bucket_folder = "samples03/"
         
         self.journal = 'elife'
             
@@ -99,6 +101,9 @@ class activity_RezipArticle(activity.activity):
             # Get the new zip file name
             zip_file_name = self.new_zip_filename(self.journal, fid, status, version)
             self.create_new_zip(zip_file_name)
+            
+            if verified and zip_file_name:
+                self.upload_article_zip_to_s3()
             
             # Partial clean up
             self.clean_directories()
@@ -173,8 +178,25 @@ class activity_RezipArticle(activity.activity):
             s3_key.get_contents_to_file(f)
             f.close()
 
-
-
+    def upload_article_zip_to_s3(self):
+        """
+        Upload the article zip files to S3
+        """
+        
+        bucket_name = self.output_bucket
+        bucket_folder_name = self.output_bucket_folder
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+    
+        for file in self.file_list(self.ZIP_DIR):
+            s3_key_name = bucket_folder_name + file.split(os.sep)[-1]
+            s3key = boto.s3.key.Key(bucket)
+            s3key.key = s3_key_name
+            s3key.set_contents_from_filename(file, replace=True)
+            if(self.logger):
+                self.logger.info("uploaded " + s3_key_name + " to s3 bucket " + bucket_name)
 
 
     def list_dir(self, dir_name):
