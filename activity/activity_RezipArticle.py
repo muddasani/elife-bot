@@ -60,6 +60,10 @@ class activity_RezipArticle(activity.activity):
         # Temporarily upload to a folder during development
         self.output_bucket_folder = "samples03/"
         
+        # Temporary detail of files from the zip files to an append log
+        self.zip_file_contents_log_name = "rezip_article_zip_file_contents.txt"
+        
+        
         self.journal = 'elife'
             
     def do_activity(self, data = None):
@@ -109,6 +113,9 @@ class activity_RezipArticle(activity.activity):
             # Partial clean up
             self.clean_directories()
             
+        # Get a list of file names and sizes
+        self.log_zip_file_contents()
+        
         # Full Clean up
         self.clean_directories(full = True)
             
@@ -120,6 +127,21 @@ class activity_RezipArticle(activity.activity):
             result = False
 
         return result
+
+    def log_zip_file_contents(self):
+        """
+        For now, append zip file contents to a separate file
+        """
+        file_log = open(self.get_tmp_dir() + os.sep
+                        + ".." + os.sep
+                        + self.zip_file_contents_log_name, 'ab')
+        for filename in self.file_list(self.ZIP_DIR):
+            
+            myzip = zipfile.ZipFile(filename, 'r')
+            for i in myzip.infolist():
+                file_log.write("\n" + filename.split(os.sep)[-1]
+                               + "\t" + str(i.filename)
+                               + "\t" + str(i.file_size))
 
     def download_files_from_s3(self, doi_id):
         
