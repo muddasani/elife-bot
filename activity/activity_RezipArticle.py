@@ -427,12 +427,20 @@ class activity_RezipArticle(activity.activity):
         if p_parent_type:
             # TODO - refactor to get the asset name
             p_parent_asset = self.asset_from_soup(old_filename, soup, 'p_p_parent_')
-            new_filename = self.add_filename_asset(new_filename, p_parent_asset, p_parent_ordinal)
+            if not p_parent_asset:
+                if(self.logger):
+                    self.logger.info('found no p_parent_asset for ' + old_filename)
+            else:
+                new_filename = self.add_filename_asset(new_filename, p_parent_asset, p_parent_ordinal)
         
         if parent_type:
             # TODO - refactor to get the asset name
             parent_asset = self.asset_from_soup(old_filename, soup, 'p_parent_')
-            new_filename = self.add_filename_asset(new_filename, parent_asset, parent_ordinal)
+            if not parent_asset:
+                if(self.logger):
+                    self.logger.info('found no parent_asset for ' + old_filename)
+            else:
+                new_filename = self.add_filename_asset(new_filename, parent_asset, parent_ordinal)
     
         
         if asset:
