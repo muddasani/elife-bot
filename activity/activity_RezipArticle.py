@@ -91,12 +91,13 @@ class activity_RezipArticle(activity.activity):
                                               version, self.article_xml_file())
             
             (verified, renamed_list, not_renamed_list) = self.verify_rename_files(file_name_map)
-            print "verified " + folder + ": " + str(verified)
-            print file_name_map
-            print "\n"
-        
+            if(self.logger):
+                self.logger.info("verified " + folder + ": " + str(verified))
+                self.logger.info(file_name_map)
+
             if len(not_renamed_list) > 0:
-                print "not renamed " + str(not_renamed_list)
+                if(self.logger):
+                    self.logger.info("not renamed " + str(not_renamed_list))
         
             # Get the new zip file name
             zip_file_name = self.new_zip_filename(self.journal, fid, status, version)
