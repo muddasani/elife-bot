@@ -517,10 +517,11 @@ class activity_RezipArticle(activity.activity):
                 if item[level + 'type'] == 'fig':
                     if level + 'asset' in item and item[level + 'asset'] == 'figsupp':
                         asset = 'figsupp'
-                    elif item[level + 'asset'] == 'media':
-                        asset = 'media'
                     else:
                         asset = 'fig'
+                elif level + 'asset' in item:
+                    # If asset is set, use it
+                    asset = item[level + 'asset']
                 elif item[level + 'type'] == 'supplementary-material':
                     asset = 'supp'
                 # TODO may want a different subarticle value
