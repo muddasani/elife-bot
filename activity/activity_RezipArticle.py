@@ -470,7 +470,8 @@ class activity_RezipArticle(activity.activity):
         else:
             # No parent, use the actual element ordinal
             details = self.details_from_soup(old_filename, soup)
-            ordinal = details['ordinal']
+            if details:
+                ordinal = details['ordinal']
             
         details = self.parent_details_from_soup(old_filename, soup, 'p_parent_')
         if details:
