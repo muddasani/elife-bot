@@ -410,6 +410,8 @@ class article(object):
           published_folder = "pub_router/published/"
       if workflow == "Cengage":
           published_folder = "cengage/published/"
+      if workflow == "GoOA":
+          published_folder = "gooa/published/"
       
       file_extensions = []
       file_extensions.append(".xml")
@@ -710,7 +712,12 @@ class article(object):
     for author in authors:
       if authors_string != "":
         authors_string += ", "
-      authors_string += author["given_names"] + " " + author["surname"]
+      if author.get("given_names"):
+        authors_string += author["given_names"] + " "
+      if author.get("surname"):
+        authors_string += author["surname"]
+      if author.get("collab"):
+        authors_string += author['collab']
       
     return authors_string
   
