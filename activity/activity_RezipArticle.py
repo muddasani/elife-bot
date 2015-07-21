@@ -220,7 +220,7 @@ class activity_RezipArticle(activity.activity):
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
     
-        for file in self.file_list(self.TMP_DIR):
+        for file in self.file_list(self.ZIP_DIR):
             s3_key_name = bucket_folder_name + file.split(os.sep)[-1]
             s3key = boto.s3.key.Key(bucket)
             s3key.key = s3_key_name
@@ -242,7 +242,7 @@ class activity_RezipArticle(activity.activity):
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
     
-        for file in self.file_list(self.ZIP_DIR):
+        for file in self.file_list(self.TMP_DIR):
             if file.split('.')[-1] == 'eps':
                 s3_key_name = bucket_folder_name + file.split(os.sep)[-1]
                 s3key = boto.s3.key.Key(bucket)
