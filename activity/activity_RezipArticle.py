@@ -60,6 +60,10 @@ class activity_RezipArticle(activity.activity):
         # Temporarily upload to a folder during development
         self.output_bucket_folder = "samples03/"
         
+        # EPS file bucket
+        self.eps_output_bucket = "elife-bot"
+        self.eps_output_bucket_folder = "eps/"
+        
         # Temporary detail of files from the zip files to an append log
         self.zip_file_contents_log_name = "rezip_article_zip_file_contents.txt"
         
@@ -109,6 +113,9 @@ class activity_RezipArticle(activity.activity):
             
             if verified and zip_file_name:
                 self.upload_article_zip_to_s3()
+            
+            # Copy EPS files
+            self.copy_eps_files_to_s3()
             
             # Partial clean up
             self.clean_directories()
@@ -221,6 +228,28 @@ class activity_RezipArticle(activity.activity):
             if(self.logger):
                 self.logger.info("uploaded " + s3_key_name + " to s3 bucket " + bucket_name)
 
+    def copy_eps_files_to_s3(self):
+        """
+        Copy .eps files to an S3 bucket for later
+        code mostly copied from upload_article_zip_to_s3()
+        and can probably refactor much of it into the s3 provider library later
+        """
+
+        bucket_name = self.eps_output_bucket
+        bucket_folder_name = self.eps_output_bucket_folder
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+    
+        for file in self.file_list(self.ZIP_DIR):
+            if file.split('.')[-1] == 'eps':
+                s3_key_name = bucket_folder_name + file.split(os.sep)[-1]
+                s3key = boto.s3.key.Key(bucket)
+                s3key.key = s3_key_name
+                s3key.set_contents_from_filename(file, replace=True)
+                if(self.logger):
+                    self.logger.info("uploaded " + s3_key_name + " to s3 bucket " + bucket_name)
 
     def list_dir(self, dir_name):
         dir_list = os.listdir(dir_name)
