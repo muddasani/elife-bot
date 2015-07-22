@@ -503,15 +503,6 @@ class activity_RezipArticle(activity.activity):
             else:
                 new_filename = self.add_filename_asset(new_filename, parent_asset, parent_ordinal)
 
-        if type and asset and asset == 'media':
-            # Media tag with a parent, a special case for now for video media inside a sub-article
-            parent_asset = self.asset_from_soup(old_filename, soup, 'parent_')
-            if not parent_asset:
-                if(self.logger):
-                    self.logger.info('found no media parent_asset for ' + old_filename)
-            else:
-                new_filename = self.add_filename_asset(new_filename, parent_asset, parent_ordinal)
-        
         if asset:
             new_filename = self.add_filename_asset(new_filename, asset, ordinal)
             new_filename = self.add_filename_version(new_filename, version)
