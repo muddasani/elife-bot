@@ -65,7 +65,7 @@ class activity_RezipArticle(activity.activity):
         # EPS file bucket
         self.eps_output_bucket = "elife-bot"
         self.eps_output_bucket_folder = "eps/"
-        self.tif_resolution = 300
+        self.tif_resolution = 600
         
         # Temporary detail of files from the zip files to an append log
         self.zip_file_contents_log_name = "rezip_article_zip_file_contents.txt"
