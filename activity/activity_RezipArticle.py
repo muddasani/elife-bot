@@ -65,6 +65,7 @@ class activity_RezipArticle(activity.activity):
         # EPS file bucket
         self.eps_output_bucket = "elife-bot"
         self.eps_output_bucket_folder = "eps/"
+        self.tif_resolution = 300
         
         # Temporary detail of files from the zip files to an append log
         self.zip_file_contents_log_name = "rezip_article_zip_file_contents.txt"
@@ -276,7 +277,7 @@ class activity_RezipArticle(activity.activity):
         for file in self.file_list(self.OUTPUT_DIR):
             if file.split('.')[-1] == 'eps':
                 tif_filename = self.TMP_DIR + os.sep + file.replace('.eps', '.tif')
-                with Image(filename=file, resolution=resolution) as img:
+                with Image(filename=file, resolution=self.tif_resolution) as img:
                      img.format = 'tif'
                      img.save(filename=tif_filename)
         
