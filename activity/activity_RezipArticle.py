@@ -531,12 +531,26 @@ class activity_RezipArticle(activity.activity):
         p_parent_type = None
         p_parent_ordinal = None
         
-        asset = self.asset_from_soup(old_filename, soup, '')
-        if not asset:
-            asset = self.asset_from_soup(old_filename, soup, 'parent_')
+        item = self.scan_soup_for_xlink_href(old_filename, soup)
+        if item:
+            type = item.get('type')
+            
+        # Here we want to set the parentage differently for videos
+        #  because those items are their own parents, in a way
+        if type and type == 'media' and 'mimetype' in item:
+            first_parent_level = ''
+            second_parent_level = 'parent_'
+            third_parent_level = 'p_parent_'
+        else:
+            first_parent_level = 'parent_'
+            second_parent_level = 'p_parent_'
+            third_parent_level = 'p_p_parent_'
+            
+        
+        asset = self.asset_from_soup(old_filename, soup, first_parent_level)
         
         # Get parent details
-        details = self.parent_details_from_soup(old_filename, soup, 'parent_')
+        details = self.parent_details_from_soup(old_filename, soup, first_parent_level)
         if details:
             type = details['type']
             ordinal = details['sibling_ordinal']
@@ -546,12 +560,12 @@ class activity_RezipArticle(activity.activity):
             if details:
                 ordinal = details['ordinal']
             
-        details = self.parent_details_from_soup(old_filename, soup, 'p_parent_')
+        details = self.parent_details_from_soup(old_filename, soup, second_parent_level)
         if details:
             parent_type = details['type']
             parent_ordinal = details['sibling_ordinal']
             
-        details = self.parent_details_from_soup(old_filename, soup, 'p_p_parent_')
+        details = self.parent_details_from_soup(old_filename, soup, third_parent_level)
         if details:
             p_parent_type = details['type']
             p_parent_ordinal = details['sibling_ordinal']
@@ -623,7 +637,7 @@ class activity_RezipArticle(activity.activity):
         return details
     
     def parent_details_from_soup(self, old_filename, soup, level):
-        if level not in ['parent_', 'p_parent_', 'p_p_parent_']:
+        if level not in ['', 'parent_', 'p_parent_', 'p_p_parent_']:
             return None
         
         details = {}
