@@ -276,7 +276,8 @@ class activity_RezipArticle(activity.activity):
         """
         for file in self.file_list(self.OUTPUT_DIR):
             if file.split('.')[-1] == 'eps':
-                tif_filename = self.TMP_DIR + os.sep + file.replace('.eps', '.tif')
+                file_without_path = file.split(os.sep)[-1]
+                tif_filename = self.TMP_DIR + os.sep + file_without_path.replace('.eps', '.tif')
                 with Image(filename=file, resolution=self.tif_resolution) as img:
                      img.format = 'tif'
                      img.save(filename=tif_filename)
