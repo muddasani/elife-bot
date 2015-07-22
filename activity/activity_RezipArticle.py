@@ -639,13 +639,19 @@ class activity_RezipArticle(activity.activity):
         
         file_name_map = {}
         
+        # Ignore these files we do not want them anymore
+        ignore_files = ['elife05087s001.docx', 'elife05087s002.docx']
+        
         dirfiles = self.file_list(self.TMP_DIR)
         
         soup = self.article_soup(xml_file)
         
         for df in dirfiles:
             filename = df.split(os.sep)[-1]
-    
+            
+            if filename in ignore_files:
+                continue
+            
             # Get the new file name
             file_name_map[filename] = None
             renamed_filename = self.new_filename(soup, filename, journal, fid, status, version)
