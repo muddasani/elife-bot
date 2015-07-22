@@ -574,8 +574,10 @@ class activity_RezipArticle(activity.activity):
         item = self.scan_soup_for_xlink_href(old_filename, soup)
         
         if item:
-            # Check for a parent_type first
-            if level + 'type' in item:
+            if 'mimetype' in item and item['mimetype'] == 'video':
+                asset = 'media'
+            elif level + 'type' in item:
+                # Check for a parent_type
                 if item[level + 'type'] == 'fig':
                     if level + 'asset' in item and item[level + 'asset'] == 'figsupp':
                         asset = 'figsupp'
@@ -590,8 +592,6 @@ class activity_RezipArticle(activity.activity):
                 elif item[level + 'type'] == 'sub-article':
                     asset = 'subarticle'
     
-            elif 'mimetype' in item and item['mimetype'] == 'video':
-                asset = 'media'
             elif 'inf' in old_filename:
                 asset = 'inf'
                 
