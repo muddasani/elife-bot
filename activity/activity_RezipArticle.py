@@ -453,6 +453,24 @@ class activity_RezipArticle(activity.activity):
     
         return new_filename
     
+    def parent_levels_by_type(self, item):
+        """
+        Given an item dict representing a matched tag,
+        depending on its type, it will have different parent levels
+        """
+        # Here we want to set the parentage differently for videos
+        #  because those items are their own parents, in a way
+        if type and type == 'media' and 'mimetype' in item:
+            first_parent_level = ''
+            second_parent_level = 'parent_'
+            third_parent_level = 'p_parent_'
+        else:
+            first_parent_level = 'parent_'
+            second_parent_level = 'p_parent_'
+            third_parent_level = 'p_p_parent_'
+        
+        return first_parent_level, second_parent_level, third_parent_level
+    
     def new_filename_generic(self, soup, old_filename, journal, fid, status, version):
         """
         After filtering out known exceptions for file name renaming,
@@ -485,9 +503,14 @@ class activity_RezipArticle(activity.activity):
         new_filename = journal
         new_filename = self.add_filename_fid(new_filename, fid)
         
+        # Need to lookup the item again to get the parent levels
+        item = self.scan_soup_for_xlink_href(old_filename, soup)
+        (first_parent_level, second_parent_level, third_parent_level) = \
+            self.parent_levels_by_type(item)
+        
         if p_parent_type:
             # TODO - refactor to get the asset name
-            p_parent_asset = self.asset_from_soup(old_filename, soup, 'p_p_parent_')
+            p_parent_asset = self.asset_from_soup(old_filename, soup, third_parent_level)
             if not p_parent_asset:
                 if(self.logger):
                     self.logger.info('found no p_parent_asset for ' + old_filename)
@@ -496,7 +519,7 @@ class activity_RezipArticle(activity.activity):
         
         if parent_type:
             # TODO - refactor to get the asset name
-            parent_asset = self.asset_from_soup(old_filename, soup, 'p_parent_')
+            parent_asset = self.asset_from_soup(old_filename, soup, second_parent_level)
             if not parent_asset:
                 if(self.logger):
                     self.logger.info('found no parent_asset for ' + old_filename)
@@ -528,15 +551,8 @@ class activity_RezipArticle(activity.activity):
             
         # Here we want to set the parentage differently for videos
         #  because those items are their own parents, in a way
-        if type and type == 'media' and 'mimetype' in item:
-            first_parent_level = ''
-            second_parent_level = 'parent_'
-            third_parent_level = 'p_parent_'
-        else:
-            first_parent_level = 'parent_'
-            second_parent_level = 'p_parent_'
-            third_parent_level = 'p_p_parent_'
-            
+        (first_parent_level, second_parent_level, third_parent_level) = \
+            self.parent_levels_by_type(item)
         
         asset = self.asset_from_soup(old_filename, soup, first_parent_level)
         
