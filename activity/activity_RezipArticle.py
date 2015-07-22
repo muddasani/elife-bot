@@ -546,8 +546,11 @@ class activity_RezipArticle(activity.activity):
             type = details['type']
             if 'sibling_ordinal' in details:
                 ordinal = details['sibling_ordinal']
-            elif 'ordinal' in details:
-                ordinal = details['ordinal']
+            else:
+                # No parent, use the actual element ordinal
+                details = self.details_from_soup(old_filename, soup)
+                if details:
+                    ordinal = details['ordinal']
             
         details = self.parent_details_from_soup(old_filename, soup, second_parent_level)
         if details:
