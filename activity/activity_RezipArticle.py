@@ -524,6 +524,7 @@ class activity_RezipArticle(activity.activity):
     def asset_details(self, fid, old_filename, soup):
         
         asset = None
+        type = None
         ordinal = None
         parent_type = None
         parent_ordinal = None
