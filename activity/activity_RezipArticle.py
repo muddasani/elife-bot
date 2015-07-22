@@ -522,7 +522,9 @@ class activity_RezipArticle(activity.activity):
         p_parent_type = None
         p_parent_ordinal = None
         
-        asset = self.asset_from_soup(old_filename, soup, 'parent_')
+        asset = self.asset_from_soup(old_filename, soup, '')
+        if not asset:
+            asset = self.asset_from_soup(old_filename, soup, 'parent_')
         
         # Get parent details
         details = self.parent_details_from_soup(old_filename, soup, 'parent_')
