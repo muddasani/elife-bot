@@ -24,6 +24,8 @@ import provider.s3lib as s3lib
 from elifetools import parseJATS as parser
 from elifetools import xmlio
 
+from wand.image import Image
+
 """
 RezipArticle activity
 """
@@ -116,6 +118,10 @@ class activity_RezipArticle(activity.activity):
             
             # Copy EPS files
             self.copy_eps_files_to_s3()
+            
+            # Covert EPS to tif
+            self.eps_to_tif()
+            self.copy_tif_files_to_s3()
             
             # Partial clean up
             self.clean_directories()
@@ -228,9 +234,9 @@ class activity_RezipArticle(activity.activity):
             if(self.logger):
                 self.logger.info("uploaded " + s3_key_name + " to s3 bucket " + bucket_name)
 
-    def copy_eps_files_to_s3(self):
+    def copy_files_to_s3(self, dir_name, file_extension):
         """
-        Copy .eps files to an S3 bucket for later
+        Copy .eps files or .tif to an S3 bucket for later
         code mostly copied from upload_article_zip_to_s3()
         and can probably refactor much of it into the s3 provider library later
         """
@@ -242,14 +248,38 @@ class activity_RezipArticle(activity.activity):
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(bucket_name)
     
-        for file in self.file_list(self.OUTPUT_DIR):
-            if file.split('.')[-1] == 'eps':
+        for file in self.file_list(dir_name):
+            if file.split('.')[-1] == file_extension:
                 s3_key_name = bucket_folder_name + file.split(os.sep)[-1]
                 s3key = boto.s3.key.Key(bucket)
                 s3key.key = s3_key_name
                 s3key.set_contents_from_filename(file, replace=True)
                 if(self.logger):
                     self.logger.info("uploaded " + s3_key_name + " to s3 bucket " + bucket_name)
+
+    def copy_eps_files_to_s3(self):
+        """
+        Copy .eps files to an S3 bucket for later
+        """
+        self.copy_files_to_s3(dir_name = self.OUTPUT_DIR, file_extension = 'eps')
+                    
+    def copy_tif_files_to_s3(self):
+        """
+        Copy .tif files or .tif to an S3 bucket for later
+        """
+        self.copy_files_to_s3(dir_name = self.TMP_DIR, file_extension = 'tif')
+          
+    def eps_to_tif(self):
+        """
+        Covert eps file to tif format
+        """
+        for file in self.file_list(self.OUTPUT_DIR):
+            if file.split('.')[-1] == 'eps':
+                tif_filename = self.TMP_DIR + os.sep + file.replace('.eps', '.tif')
+                with Image(filename=file, resolution=resolution) as img:
+                     img.format = 'tif'
+                     img.save(filename=tif_filename)
+        
 
     def list_dir(self, dir_name):
         dir_list = os.listdir(dir_name)
