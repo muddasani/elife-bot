@@ -468,7 +468,7 @@ class activity_RezipArticle(activity.activity):
             return None
         new_extension = '.' + extension.lower()
     
-        (asset, ordinal, parent_type, parent_ordinal,
+        (asset, type, ordinal, parent_type, parent_ordinal,
         p_parent_type, p_parent_ordinal) = self.asset_details(fid, old_filename, soup)
     
         # For now, only allow ones that have an ordinal,
@@ -502,7 +502,15 @@ class activity_RezipArticle(activity.activity):
                     self.logger.info('found no parent_asset for ' + old_filename)
             else:
                 new_filename = self.add_filename_asset(new_filename, parent_asset, parent_ordinal)
-    
+
+        if type and asset and asset == 'media':
+            # Media tag with a parent, a special case for now for video media inside a sub-article
+            parent_asset = self.asset_from_soup(old_filename, soup, 'parent_')
+            if not parent_asset:
+                if(self.logger):
+                    self.logger.info('found no media parent_asset for ' + old_filename)
+            else:
+                new_filename = self.add_filename_asset(new_filename, parent_asset, parent_ordinal)
         
         if asset:
             new_filename = self.add_filename_asset(new_filename, asset, ordinal)
@@ -529,6 +537,7 @@ class activity_RezipArticle(activity.activity):
         # Get parent details
         details = self.parent_details_from_soup(old_filename, soup, 'parent_')
         if details:
+            type = details['type']
             ordinal = details['sibling_ordinal']
         else:
             # No parent, use the actual element ordinal
@@ -546,7 +555,7 @@ class activity_RezipArticle(activity.activity):
             p_parent_type = details['type']
             p_parent_ordinal = details['sibling_ordinal']
         
-        return asset, ordinal, parent_type, parent_ordinal, p_parent_type, p_parent_ordinal
+        return asset, type, ordinal, parent_type, parent_ordinal, p_parent_type, p_parent_ordinal
     
     def items_to_match(self, soup):
         graphics = parser.graphics(soup)
