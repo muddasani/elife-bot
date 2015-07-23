@@ -118,11 +118,11 @@ class activity_RezipArticle(activity.activity):
                 self.upload_article_zip_to_s3()
             
             # Copy EPS files
-            self.copy_eps_files_to_s3()
+            #self.copy_eps_files_to_s3()
             
             # Covert EPS to tif
-            self.eps_to_tif()
-            self.copy_tif_files_to_s3()
+            #self.eps_to_tif()
+            #self.copy_tif_files_to_s3()
             
             # Partial clean up
             self.clean_directories()
