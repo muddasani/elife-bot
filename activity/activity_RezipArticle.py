@@ -526,6 +526,15 @@ class activity_RezipArticle(activity.activity):
             else:
                 new_filename = self.add_filename_asset(new_filename, parent_asset, parent_ordinal)
 
+        if type == 'media' and first_parent_level == '':
+            # TODO - refactor to get the asset name
+            parent_asset = self.asset_from_soup(old_filename, soup, first_parent_level)
+            if not parent_asset:
+                if(self.logger):
+                    self.logger.info('found no first parent_asset for ' + old_filename)
+            else:
+                new_filename = self.add_filename_asset(new_filename, parent_asset, parent_ordinal)
+
         if asset:
             new_filename = self.add_filename_asset(new_filename, asset, ordinal)
             new_filename = self.add_filename_version(new_filename, version)
