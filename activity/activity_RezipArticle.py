@@ -632,6 +632,8 @@ class activity_RezipArticle(activity.activity):
                 # TODO may want a different subarticle value
                 elif item[level + 'type'] == 'sub-article':
                     asset = 'subarticle'
+                elif 'mimetype' in item and item['mimetype'] == 'video':
+                    asset = 'media'
             elif 'mimetype' in item and item['mimetype'] == 'video':
                 asset = 'media'
             elif 'inf' in old_filename:
