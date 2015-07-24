@@ -295,6 +295,18 @@ class activity_RezipArticle(activity.activity):
         """
         Copy .tif files or .tif to an S3 bucket for later
         """
+        # Zip TIF files
+        # TODO!!!
+        
+        self.copy_files_to_s3(dir_name = self.EPS_DIR, file_extension = 'tif')
+         
+    def copy_xml_files_to_s3(self):
+        """
+        Copy .tif files or .tif to an S3 bucket for later
+        """
+        # Zip TIF files
+        # TODO!!!
+        
         self.copy_files_to_s3(dir_name = self.EPS_DIR, file_extension = 'tif')
           
     def eps_to_tif(self):
@@ -304,7 +316,7 @@ class activity_RezipArticle(activity.activity):
         for file in self.file_list(self.OUTPUT_DIR):
             if file.split('.')[-1] == 'eps':
                 file_without_path = file.split(os.sep)[-1]
-                tif_filename = self.TMP_DIR + os.sep + file_without_path.replace('.eps', '.tif')
+                tif_filename = self.EPS_DIR + os.sep + file_without_path.replace('.eps', '.tif')
                 with Image(filename=file, resolution=self.tif_resolution) as img:
                      img.format = 'tif'
                      img.save(filename=tif_filename)
