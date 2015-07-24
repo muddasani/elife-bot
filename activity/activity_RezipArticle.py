@@ -54,7 +54,8 @@ class activity_RezipArticle(activity.activity):
         self.TMP_DIR = self.get_tmp_dir() + os.sep + "tmp_dir"
         self.INPUT_DIR = self.get_tmp_dir() + os.sep + "input_dir"
         self.JUNK_DIR = self.get_tmp_dir() + os.sep + "junk_dir"
-        self.ZIP_DIR = self.get_tmp_dir() + os.sep + "zip_dir" 
+        self.ZIP_DIR = self.get_tmp_dir() + os.sep + "zip_dir"
+        self.EPS_DIR = self.get_tmp_dir() + os.sep + "eps_dir" 
         self.OUTPUT_DIR = self.get_tmp_dir() + os.sep + "output_dir"
        
         # Bucket settings
@@ -117,12 +118,8 @@ class activity_RezipArticle(activity.activity):
             if verified and zip_file_name:
                 self.upload_article_zip_to_s3()
             
-            # Copy EPS files
-            #self.copy_eps_files_to_s3()
-            
-            # Covert EPS to tif
-            #self.eps_to_tif()
-            #self.copy_tif_files_to_s3()
+            # Convert EPS files
+            self.convert_eps_files()
             
             # Partial clean up
             self.clean_directories()
@@ -258,17 +255,47 @@ class activity_RezipArticle(activity.activity):
                 if(self.logger):
                     self.logger.info("uploaded " + s3_key_name + " to s3 bucket " + bucket_name)
 
+    def convert_eps_files(self):
+        """
+        Convertand uploading EPS files
+        """
+        # Copy EPS files
+        found_eps = self.copy_eps_files_to_s3()
+        
+        # Covert EPS to tif
+        self.eps_to_tif()
+        self.copy_tif_files_to_s3()
+        
+        if found_eps:
+            # Copy XML file to S3 too
+            # TODO!!!
+            pass
+        
+
     def copy_eps_files_to_s3(self):
         """
         Copy .eps files to an S3 bucket for later
         """
-        self.copy_files_to_s3(dir_name = self.OUTPUT_DIR, file_extension = 'eps')
+        # Copy EPS files
+        found_eps = False
+        for file in self.file_list(self.OUTPUT_DIR):
+            if file.split('.')[-1] == 'eps':
+                shutil.copyfile(file, self.EPS_DIR + os.sep + self.file_name_from_name(file))
+                found_eps = True
+        
+        # Zip EPS files
+        # TODO!!!
+        
+        # Copy files to S3
+        self.copy_files_to_s3(dir_name = self.EPS_DIR, file_extension = 'eps')
+        
+        return found_eps
                     
     def copy_tif_files_to_s3(self):
         """
         Copy .tif files or .tif to an S3 bucket for later
         """
-        self.copy_files_to_s3(dir_name = self.TMP_DIR, file_extension = 'tif')
+        self.copy_files_to_s3(dir_name = self.EPS_DIR, file_extension = 'tif')
           
     def eps_to_tif(self):
         """
@@ -780,6 +807,8 @@ class activity_RezipArticle(activity.activity):
             os.remove(file)
         for file in self.file_list(self.JUNK_DIR):
             os.remove(file)
+        for file in self.file_list(self.EPS_DIR):
+            os.remove(file)
 
         if full is True:
             for file in self.file_list(self.ZIP_DIR):
@@ -856,6 +885,7 @@ class activity_RezipArticle(activity.activity):
             os.mkdir(self.INPUT_DIR)
             os.mkdir(self.JUNK_DIR)
             os.mkdir(self.ZIP_DIR)
+            os.mkdir(self.EPS_DIR)
             os.mkdir(self.OUTPUT_DIR)
             
         except:
