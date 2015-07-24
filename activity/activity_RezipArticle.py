@@ -284,9 +284,10 @@ class activity_RezipArticle(activity.activity):
                 found_eps = True
                 
                 # Zip EPS files
-                zip_file_name = self.EPS_DIR + os.sep + self.file_name_from_name(file) + '.zip'
+                filename = self.file_name_from_name(file)
+                zip_file_name = self.EPS_DIR + os.sep + filename + '.zip'
                 new_zipfile = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
-                new_zipfile.write(df, file)
+                new_zipfile.write(file, filename)
                 new_zipfile.close()
 
         # Copy files to S3
@@ -302,9 +303,10 @@ class activity_RezipArticle(activity.activity):
         for file in self.file_list(self.TIF_DIR):
             if file.split('.')[-1] == 'tif':
                 # Zip TIF files
-                zip_file_name = self.TIF_DIR + os.sep + self.file_name_from_name(file) + '.zip'
+                filename = self.file_name_from_name(file)
+                zip_file_name = self.TIF_DIR + os.sep + filename + '.zip'
                 new_zipfile = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
-                new_zipfile.write(df, file)
+                new_zipfile.write(file, filename)
                 new_zipfile.close()
         
         self.copy_files_to_s3(dir_name = self.TIF_DIR, file_extension = 'zip')
