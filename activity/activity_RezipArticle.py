@@ -284,7 +284,7 @@ class activity_RezipArticle(activity.activity):
                 found_eps = True
                 
                 # Zip EPS files
-                zip_file_name = self.EPS_DIR + os.sep + self.file_name_from_name(file)) + '.zip'
+                zip_file_name = self.EPS_DIR + os.sep + self.file_name_from_name(file) + '.zip'
                 new_zipfile = zipfile.ZipFile(self.EPS_DIR + os.sep + zip_file_name, 'w', zipfile.ZIP_DEFLATED)
                 new_zipfile.write(df, file)
                 new_zipfile.close()
@@ -302,7 +302,7 @@ class activity_RezipArticle(activity.activity):
         for file in self.file_list(self.TIF_DIR):
             if file.split('.')[-1] == 'tif':
                 # Zip TIF files
-                zip_file_name = self.TIF_DIR + os.sep + self.file_name_from_name(file)) + '.zip'
+                zip_file_name = self.TIF_DIR + os.sep + self.file_name_from_name(file) + '.zip'
                 new_zipfile = zipfile.ZipFile(self.TIF_DIR + os.sep + zip_file_name, 'w', zipfile.ZIP_DEFLATED)
                 new_zipfile.write(df, file)
                 new_zipfile.close()
