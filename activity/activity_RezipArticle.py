@@ -55,7 +55,8 @@ class activity_RezipArticle(activity.activity):
         self.INPUT_DIR = self.get_tmp_dir() + os.sep + "input_dir"
         self.JUNK_DIR = self.get_tmp_dir() + os.sep + "junk_dir"
         self.ZIP_DIR = self.get_tmp_dir() + os.sep + "zip_dir"
-        self.EPS_DIR = self.get_tmp_dir() + os.sep + "eps_dir" 
+        self.EPS_DIR = self.get_tmp_dir() + os.sep + "eps_dir"
+        self.TIF_DIR = self.get_tmp_dir() + os.sep + "tif_dir" 
         self.OUTPUT_DIR = self.get_tmp_dir() + os.sep + "output_dir"
        
         # Bucket settings
@@ -268,8 +269,7 @@ class activity_RezipArticle(activity.activity):
         
         if found_eps:
             # Copy XML file to S3 too
-            # TODO!!!
-            pass
+            self.copy_xml_files_to_s3()
         
 
     def copy_eps_files_to_s3(self):
@@ -282,12 +282,15 @@ class activity_RezipArticle(activity.activity):
             if file.split('.')[-1] == 'eps':
                 shutil.copyfile(file, self.EPS_DIR + os.sep + self.file_name_from_name(file))
                 found_eps = True
-        
-        # Zip EPS files
-        # TODO!!!
-        
+                
+                # Zip EPS files
+                zip_file_name = self.EPS_DIR + os.sep + self.file_name_from_name(file)) + '.zip'
+                new_zipfile = zipfile.ZipFile(self.EPS_DIR + os.sep + zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+                new_zipfile.write(df, file)
+                new_zipfile.close()
+
         # Copy files to S3
-        self.copy_files_to_s3(dir_name = self.EPS_DIR, file_extension = 'eps')
+        self.copy_files_to_s3(dir_name = self.EPS_DIR, file_extension = 'zip')
         
         return found_eps
                     
@@ -296,18 +299,22 @@ class activity_RezipArticle(activity.activity):
         Copy .tif files or .tif to an S3 bucket for later
         """
         # Zip TIF files
-        # TODO!!!
+        for file in self.file_list(self.TIF_DIR):
+            if file.split('.')[-1] == 'tif':
+                # Zip TIF files
+                zip_file_name = self.TIF_DIR + os.sep + self.file_name_from_name(file)) + '.zip'
+                new_zipfile = zipfile.ZipFile(self.TIF_DIR + os.sep + zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+                new_zipfile.write(df, file)
+                new_zipfile.close()
         
-        self.copy_files_to_s3(dir_name = self.EPS_DIR, file_extension = 'tif')
+        self.copy_files_to_s3(dir_name = self.TIF_DIR, file_extension = 'zip')
          
     def copy_xml_files_to_s3(self):
         """
-        Copy .tif files or .tif to an S3 bucket for later
+        Copy .xml files to an S3 bucket for later
         """
-        # Zip TIF files
-        # TODO!!!
-        
-        self.copy_files_to_s3(dir_name = self.EPS_DIR, file_extension = 'tif')
+
+        self.copy_files_to_s3(dir_name = self.OUTPUT_DIR, file_extension = 'xml')
           
     def eps_to_tif(self):
         """
@@ -316,7 +323,7 @@ class activity_RezipArticle(activity.activity):
         for file in self.file_list(self.OUTPUT_DIR):
             if file.split('.')[-1] == 'eps':
                 file_without_path = file.split(os.sep)[-1]
-                tif_filename = self.EPS_DIR + os.sep + file_without_path.replace('.eps', '.tif')
+                tif_filename = self.TIF_DIR + os.sep + file_without_path.replace('.eps', '.tif')
                 with Image(filename=file, resolution=self.tif_resolution) as img:
                      img.format = 'tif'
                      img.save(filename=tif_filename)
@@ -821,6 +828,8 @@ class activity_RezipArticle(activity.activity):
             os.remove(file)
         for file in self.file_list(self.EPS_DIR):
             os.remove(file)
+        for file in self.file_list(self.TIF_DIR):
+            os.remove(file)
 
         if full is True:
             for file in self.file_list(self.ZIP_DIR):
@@ -898,6 +907,7 @@ class activity_RezipArticle(activity.activity):
             os.mkdir(self.JUNK_DIR)
             os.mkdir(self.ZIP_DIR)
             os.mkdir(self.EPS_DIR)
+            os.mkdir(self.TIF_DIR)
             os.mkdir(self.OUTPUT_DIR)
             
         except:
