@@ -120,7 +120,7 @@ class activity_RezipArticle(activity.activity):
                 self.upload_article_zip_to_s3()
             
             # Convert EPS files
-            self.convert_eps_files()
+            # self.convert_eps_files()
             
             # Partial clean up
             self.clean_directories()
