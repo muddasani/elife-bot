@@ -745,7 +745,7 @@ class activity_RezipArticle(activity.activity):
                 if(self.logger):
                     self.logger.info('there is no renamed file for ' + filename)
         
-        # Covert the XML
+        # Convert the XML
         self.convert_xml(xml_file, file_name_map)
         
         for old_name,new_name in file_name_map.iteritems():
