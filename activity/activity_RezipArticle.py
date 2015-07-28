@@ -448,7 +448,7 @@ class activity_RezipArticle(activity.activity):
             
     def add_filename_asset(self, filename, asset, ordinal = None):
         filename += '-' + asset
-        if ordinal:
+        if ordinal and asset not in ['dec', 'resp']:
             filename += str(ordinal)
         return filename
     
