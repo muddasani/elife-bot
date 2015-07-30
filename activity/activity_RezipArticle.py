@@ -328,6 +328,7 @@ class activity_RezipArticle(activity.activity):
                 tif_filename = self.TIF_DIR + os.sep + file_without_path.replace('.eps', '.tif')
                 with Image(filename=file, resolution=self.tif_resolution) as img:
                      img.format = 'tif'
+                     img.colorspace = 'rgb'
                      img.save(filename=tif_filename)
         
 
