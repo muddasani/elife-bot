@@ -72,6 +72,8 @@ class activity_RezipArticle(activity.activity):
         # Temporary detail of files from the zip files to an append log
         self.zip_file_contents_log_name = "rezip_article_zip_file_contents.txt"
         
+        # Blank article provider used to get PoA details
+        self.blank_article = articlelib.article(self.settings, self.get_tmp_dir())
         
         self.journal = 'elife'
             
@@ -92,6 +94,13 @@ class activity_RezipArticle(activity.activity):
         self.download_files_from_s3(elife_id)
         
         verified = None
+        # Check for an empty folder and respond true
+        #  if we do not do this it will continue to attempt this activity
+        if len(self.folder_list(self.INPUT_DIR)) <= 0:
+            if(self.logger):
+                self.logger.info('folder was empty in RezipArticle: ' + self.INPUT_DIR)
+            verified = True
+        
         for folder in self.folder_list(self.INPUT_DIR):
             if(self.logger):
                 self.logger.info('processing files in folder ' + folder)
@@ -157,19 +166,29 @@ class activity_RezipArticle(activity.activity):
 
     def download_files_from_s3(self, doi_id):
         
+        # VoR file download
         self.download_vor_files_from_s3(doi_id)
-
+        
+        # PoA download
+        # Instantiate a new article object
+        was_ever_poa = self.blank_article.check_was_ever_poa(doi_id)
+        if was_ever_poa is True:
+            self.download_poa_files_from_s3(doi_id)
 
     def download_poa_files_from_s3(self, doi_id):
         """
 
         """
-        pass
+        if(self.logger):
+            self.logger.info('downloading PoA files for doi ' + str(doi_id))
         
     def download_vor_files_from_s3(self, doi_id):
         """
 
         """
+        if(self.logger):
+            self.logger.info('downloading VoR files for doi ' + str(doi_id))
+        
         subfolder_name = str(doi_id).zfill(5)
         prefix = subfolder_name + '/'
         
