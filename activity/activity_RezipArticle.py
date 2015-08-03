@@ -19,8 +19,9 @@ import activity
 import boto.s3
 from boto.s3.connection import S3Connection
 
-import provider.article as articlelib
 import provider.s3lib as s3lib
+import provider.simpleDB as dblib
+
 from elifetools import parseJATS as parser
 from elifetools import xmlio
 
@@ -72,9 +73,15 @@ class activity_RezipArticle(activity.activity):
         # Temporary detail of files from the zip files to an append log
         self.zip_file_contents_log_name = "rezip_article_zip_file_contents.txt"
         
-        # Blank article provider used to get PoA details
-        self.blank_article = articlelib.article(self.settings, self.get_tmp_dir())
+        # Data provider
+        self.db = dblib.SimpleDB(settings)
+        self.simpledb_domain_name = None
+        if self.article_bucket == "elife-articles-dev":
+            self.simpledb_domain_name = "POAFile_dev"
+        elif self.article_bucket == "elife-articles":
+            self.simpledb_domain_name = "POAFile"
         
+        # journal
         self.journal = 'elife'
             
     def do_activity(self, data = None):
@@ -171,9 +178,46 @@ class activity_RezipArticle(activity.activity):
         
         # PoA download
         # Instantiate a new article object
-        was_ever_poa = self.blank_article.check_was_ever_poa(doi_id)
+        was_ever_poa = self.check_was_ever_poa(doi_id)
         if was_ever_poa is True:
             self.download_poa_files_from_s3(doi_id)
+
+    def poa_file_sdb_domain(self):
+        """
+        Connect to SimpelDB and either create or connect to the domain
+        and retun the domain
+        """
+        dom = None
+        sdb_conn = self.db.connect()
+        
+        domain_name = self.simpledb_domain_name
+        
+        try:
+            dom = sdb_conn.get_domain(domain_name)
+            print "Found simpledb domain" + domain_name
+        except:
+            print "Creating simpledb domain" + domain_name
+            dom = sdb_conn.create_domain(domain_name)
+            
+        return dom
+
+    def check_was_ever_poa(self, doi_id):
+        """
+        For speed, relying on the populated SimpleDB table that holds
+        PoA article data to determine if the article was ever PoA
+        """
+        dom = self.poa_file_sdb_domain()
+        query = ("select count(*) from " + self.simpledb_domain_name
+                    + " where doi_id = '" + str(doi_id) + "'")
+        print query
+            
+        rs = dom.select(query)
+        for row in rs:
+            if int(row['Count']) == 0:
+                return False
+            elif int(row['Count']) > 0:
+                return True
+
 
     def download_poa_files_from_s3(self, doi_id):
         """
