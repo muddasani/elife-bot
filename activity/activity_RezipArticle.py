@@ -27,6 +27,8 @@ from elifetools import xmlio
 
 from wand.image import Image
 
+from xml.etree.ElementTree import Element, SubElement
+
 """
 RezipArticle activity
 """
@@ -116,6 +118,7 @@ class activity_RezipArticle(activity.activity):
     
             (fid, status, version) = self.profile_article(self.INPUT_DIR, folder)
             
+            # Rename the files
             file_name_map = self.rename_files(self.journal, fid, status,
                                               version, self.article_xml_file())
             
@@ -127,6 +130,11 @@ class activity_RezipArticle(activity.activity):
             if len(not_renamed_list) > 0:
                 if(self.logger):
                     self.logger.info("not renamed " + str(not_renamed_list))
+        
+            # Convert the XML
+            self.convert_xml(doi_id = elife_id,
+                             xml_file = self.article_xml_file(),
+                             file_name_map = file_name_map)
         
             # Get the new zip file name
             zip_file_name = self.new_zip_filename(self.journal, fid, status, version)
@@ -905,9 +913,6 @@ class activity_RezipArticle(activity.activity):
                 if(self.logger):
                     self.logger.info('there is no renamed file for ' + filename)
         
-        # Convert the XML
-        self.convert_xml(xml_file, file_name_map)
-        
         for old_name,new_name in file_name_map.iteritems():
             if new_name is not None:
                 shutil.move(self.TMP_DIR + os.sep + old_name, self.OUTPUT_DIR + os.sep + new_name)
@@ -932,7 +937,7 @@ class activity_RezipArticle(activity.activity):
                 
         return (verified, renamed_list, not_renamed_list)
     
-    def convert_xml(self, xml_file, file_name_map):
+    def convert_xml(self, doi_id, xml_file, file_name_map):
         # TODO
         
         # Register namespaces
@@ -944,9 +949,12 @@ class activity_RezipArticle(activity.activity):
         total = xmlio.convert_xlink_href(root, file_name_map)
         # TODO - compare whether all file names were converted
         
-        # TODO For PoA, add the published date to the XML
-        
-    
+        # For PoA, add the published date to the XML
+        soup = self.article_soup(self.article_xml_file())
+        if parser.is_poa(soup) and parser.pub_date(soup) is None:
+            root = self.add_pub_date_to_xml(doi_id, root)
+            
+
         # Start the file output
         reparsed_string = xmlio.output(root)
         
@@ -954,6 +962,41 @@ class activity_RezipArticle(activity.activity):
         f.write(reparsed_string)
         f.close()
     
+    def add_pub_date_to_xml(self, doi_id, root):
+        
+        # Get the date for the first version
+        version = 1
+        date_str = self.get_poa_date_str_for_version(doi_id, version)
+        date_struct = time.strptime(date_str,  "%Y%m%d")
+        
+        # Create the pub-date XML tag
+        pub_date_tag = self.pub_date_xml(date_struct)
+
+        # Add the tag to the XML
+        for tag in root.findall('./front/article-meta'):
+            parent_tag_index = xmlio.get_first_element_index(tag, 'history')
+            tag.insert( parent_tag_index - 1, pub_date_tag)
+            # Should only do it once but ensure it is only done once
+            break
+        
+        return root
+    
+    def pub_date_xml(self, pub_date):
+        
+        pub_date_tag = Element("pub-date")
+        pub_date_tag.set("publication-format", "electronic")
+        pub_date_tag.set("date-type", "pub")
+        
+        day = SubElement(pub_date_tag, "day")
+        day.text = str(pub_date.tm_mday).zfill(2)
+        
+        month = SubElement(pub_date_tag, "month")
+        month.text = str(pub_date.tm_mon).zfill(2)
+        
+        year = SubElement(pub_date_tag, "Year")
+        year.text = str(pub_date.tm_year)
+    
+        return pub_date_tag
     
     def new_zip_filename(self, journal, fid, status, version = None):
         filename = journal
@@ -1090,9 +1133,20 @@ class activity_RezipArticle(activity.activity):
 
     
     def article_xml_file(self):
+        """
+        Two directories the XML file might be in depending on the step
+        """
+        file_name = None
+        
         for file_name in self.file_list(self.TMP_DIR):
             if file_name.endswith('.xml'):
                 return file_name
+        if not file_name:
+            for file_name in self.file_list(self.OUTPUT_DIR):
+                if file_name.endswith('.xml'):
+                    return file_name
+            
+        return file_name
     
     def article_soup(self, xml_filename):
         return parser.parse_document(xml_filename)
