@@ -949,10 +949,13 @@ class activity_RezipArticle(activity.activity):
         total = xmlio.convert_xlink_href(root, file_name_map)
         # TODO - compare whether all file names were converted
         
-        # For PoA, add the published date to the XML
+        # For PoA, 
         soup = self.article_soup(self.article_xml_file())
         if parser.is_poa(soup) and parser.pub_date(soup) is None:
+            # add the published date to the XML
             root = self.add_pub_date_to_xml(doi_id, root)
+            # set the article-id, to overwrite the v2, v3 value if present
+            root = self.set_article_id_xml(doi_id, root)
             
 
         # Start the file output
@@ -1001,6 +1004,17 @@ class activity_RezipArticle(activity.activity):
         year.text = str(pub_date.tm_year)
     
         return pub_date_tag
+    
+    def set_article_id_xml(self, doi_id, root):
+        
+        for tag in root.findall('./front/article-meta/article-id'):
+            if tag.get('pub-id-type') == "publisher-id":
+                # Overwrite the text with the base DOI value
+                tag.text = str(doi_id).zfill(5)
+                
+        return root
+        
+        
     
     def new_zip_filename(self, journal, fid, status, version = None):
         filename = journal
