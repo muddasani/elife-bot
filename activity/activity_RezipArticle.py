@@ -993,7 +993,7 @@ class activity_RezipArticle(activity.activity):
         month = SubElement(pub_date_tag, "month")
         month.text = str(pub_date.tm_mon).zfill(2)
         
-        year = SubElement(pub_date_tag, "Year")
+        year = SubElement(pub_date_tag, "year")
         year.text = str(pub_date.tm_year)
     
         return pub_date_tag
