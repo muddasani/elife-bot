@@ -956,6 +956,10 @@ class activity_RezipArticle(activity.activity):
             root = self.add_pub_date_to_xml(doi_id, root)
             # set the article-id, to overwrite the v2, v3 value if present
             root = self.set_article_id_xml(doi_id, root)
+            # if ds.zip file is there, then add it to the xml
+            if self.poa_ds_zip_file_name(file_name_map) is not None:
+                file_name = self.poa_ds_zip_file_name(file_name_map)
+                root = self.add_poa_ds_zip_to_xml(doi_id, file_name, root)
             
 
         # Start the file output
@@ -976,10 +980,10 @@ class activity_RezipArticle(activity.activity):
 
         # Add the tag to the XML
         for tag in root.findall('./front/article-meta'):
-            parent_tag_index = xmlio.get_first_element_index(tag, 'history')
+            parent_tag_index = xmlio.get_first_element_index(tag, 'elocation-id')
             if not parent_tag_index:
                 if(self.logger):
-                    self.logger.info('no history tag and no pub-date added: ' + str(doi_id))
+                    self.logger.info('no elocation-id tag and no pub-date added: ' + str(doi_id))
             else:
                 tag.insert( parent_tag_index - 1, pub_date_tag)
                 
@@ -1014,7 +1018,44 @@ class activity_RezipArticle(activity.activity):
                 
         return root
         
+    def poa_ds_zip_file_name(self, file_name_map):
+        """
+        Given a file name map of a PoA article renamed files,
+        look for a zip file name, which is the ds.zip file
+        Return it, or return None if it is not there
+        """
+        for old_name,new_name in file_name_map.iteritems():
+            if self.file_extension(new_name) == 'zip':
+                return new_name
         
+        return None
+    
+    def add_poa_ds_zip_to_xml(self, doi_id, file_name, root):
+        """
+        Add the ext-link tag to the XML for the PoA ds.zip file
+        """
+
+        # Create the XML tag
+        supp_tag = self.ds_zip_xml_element(file_name)
+
+        # Add the tag to the XML
+        for tag in root.findall('./front/article-meta'):
+            parent_tag_index = xmlio.get_first_element_index(tag, 'history')
+            if not parent_tag_index:
+                if(self.logger):
+                    self.logger.info('no history tag and no ds_zip tag added: ' + str(doi_id))
+            else:
+                tag.insert( parent_tag_index - 1, supp_tag)
+            
+        return root
+    
+    def ds_zip_xml_element(self, file_name):
+        
+        supp_tag = Element("supplementary-material")
+        ext_link_tag = SubElement(supp_tag, "ext-link")
+        ext_link_tag.set("xlink:href", file_name)
+        return supp_tag
+
     
     def new_zip_filename(self, journal, fid, status, version = None):
         filename = journal
