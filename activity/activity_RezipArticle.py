@@ -194,9 +194,11 @@ class activity_RezipArticle(activity.activity):
         
         try:
             dom = sdb_conn.get_domain(domain_name)
-            print "Found simpledb domain" + domain_name
+            if(self.logger):
+                self.logger.info("Found simpledb domain " + domain_name) 
         except:
-            print "Creating simpledb domain" + domain_name
+            if(self.logger):
+                self.logger.info("Creating simpledb domain" + domain_name) 
             dom = sdb_conn.create_domain(domain_name)
             
         return dom
@@ -313,10 +315,11 @@ class activity_RezipArticle(activity.activity):
                 s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
                 bucket = s3_conn.lookup(self.settings.poa_packaging_bucket)
                 
-                print subfolder_name
                 s3_key_names = self.get_poa_s3_key_names(doi_id, version)
-                print len(s3_key_names)
-                print s3_key_names
+
+                if(self.logger):
+                    self.logger.info('poa subfolder_name name: ' + subfolder_name)
+                    self.logger.info(s3_key_names)
                 
                 self.download_s3_key_names_to_subfolder(bucket, s3_key_names, subfolder_name)
         
