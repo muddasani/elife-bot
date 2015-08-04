@@ -965,23 +965,27 @@ class activity_RezipArticle(activity.activity):
     def add_pub_date_to_xml(self, doi_id, root):
         
         # Get the date for the first version
-        version = 1
-        date_str = self.get_poa_date_str_for_version(doi_id, version)
+        date_str = self.get_poa_date_str_for_version(doi_id, version = 1)
         date_struct = time.strptime(date_str,  "%Y%m%d")
         
         # Create the pub-date XML tag
-        pub_date_tag = self.pub_date_xml(date_struct)
+        pub_date_tag = self.pub_date_xml_element(date_struct)
 
         # Add the tag to the XML
         for tag in root.findall('./front/article-meta'):
             parent_tag_index = xmlio.get_first_element_index(tag, 'history')
-            tag.insert( parent_tag_index - 1, pub_date_tag)
+            if not parent_tag_index:
+                if(self.logger):
+                    self.logger.info('no history tag and no pub-date added: ' + str(doi_id))
+            else:
+                tag.insert( parent_tag_index - 1, pub_date_tag)
+                
             # Should only do it once but ensure it is only done once
             break
         
         return root
     
-    def pub_date_xml(self, pub_date):
+    def pub_date_xml_element(self, pub_date):
         
         pub_date_tag = Element("pub-date")
         pub_date_tag.set("publication-format", "electronic")
