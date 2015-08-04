@@ -63,7 +63,7 @@ class activity_RezipArticle(activity.activity):
         # Bucket settings
         self.output_bucket = "elife-articles-renamed"
         # Temporarily upload to a folder during development
-        self.output_bucket_folder = "samples03/"
+        self.output_bucket_folder = "samples04/"
         
         # EPS file bucket
         self.eps_output_bucket = "elife-eps-renamed"
@@ -209,7 +209,29 @@ class activity_RezipArticle(activity.activity):
         dom = self.poa_file_sdb_domain()
         query = ("select count(*) from " + self.simpledb_domain_name
                     + " where doi_id = '" + str(doi_id) + "'")
-        print query
+        
+        if(self.logger):
+            self.logger.info(query)
+            
+        rs = dom.select(query)
+        for row in rs:
+            if int(row['Count']) == 0:
+                return False
+            elif int(row['Count']) > 0:
+                return True
+            
+    def check_poa_has_version(self, doi_id, version):
+        """
+        Relying on the populated SimpleDB table for PoA data
+        look whether a version exists
+        """
+        dom = self.poa_file_sdb_domain()
+        query = ("select count(*) from " + self.simpledb_domain_name
+                    + " where doi_id = '" + str(doi_id) + "'"
+                    + " and version = '" + str(version) + "'")
+        
+        if(self.logger):
+            self.logger.info(query)
             
         rs = dom.select(query)
         for row in rs:
@@ -218,6 +240,61 @@ class activity_RezipArticle(activity.activity):
             elif int(row['Count']) > 0:
                 return True
 
+    def get_poa_date_str_for_version(self, doi_id, version):
+        """
+        Relying on the populated SimpleDB table for PoA data
+        look whether a version exists
+        """
+        dom = self.poa_file_sdb_domain()
+        query = ("select date_str from " + self.simpledb_domain_name
+                    + " where doi_id = '" + str(doi_id) + "'"
+                    + " and version = '" + str(version) + "'"
+                    + " and file_type = 'xml' and date_str is not null "
+                    + " order by date_str desc limit 1")
+   
+        if(self.logger):
+            self.logger.info(query)
+            
+        rs = dom.select(query)
+        for row in rs:
+            return row['date_str']
+
+        # default
+        return None
+    
+    def get_poa_s3_key_names_from_db(self, doi_id, version, date_str):
+        
+        s3_key_names = []
+        
+        dom = self.poa_file_sdb_domain()
+        query = ("select * from " + self.simpledb_domain_name
+                    + " where doi_id = '" + str(doi_id) + "'"
+                    + " and version = '" + str(version) + "'"
+                    + " and date_str = '" + str(date_str) + "'")
+
+        if(self.logger):
+            self.logger.info(query)
+            
+        rs = dom.select(query)
+        for row in rs:
+            s3_key_names.append(row['s3_key_name'])
+        
+        return s3_key_names
+        
+
+    def get_poa_s3_key_names(self, doi_id, version):
+        """
+        Given a doi and version number, find the PoA files
+        for that version - from the most recent folder, because
+        sometimes PoA files are prepared more than once, use the latest
+        """
+        s3_key_names = []
+        date_str = self.get_poa_date_str_for_version(doi_id, version)
+        if date_str:
+            s3_key_names = self.get_poa_s3_key_names_from_db(doi_id, version, date_str)
+        
+        return s3_key_names
+
 
     def download_poa_files_from_s3(self, doi_id):
         """
@@ -225,6 +302,23 @@ class activity_RezipArticle(activity.activity):
         """
         if(self.logger):
             self.logger.info('downloading PoA files for doi ' + str(doi_id))
+            
+        versions = [1,2,3,4]
+        for version in versions:
+            if self.check_poa_has_version(doi_id, version) is True:
+                # We have a version
+                subfolder_name = str(doi_id).zfill(5) + '_v' + str(version)
+                
+                # Connect to S3 and bucket
+                s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+                bucket = s3_conn.lookup(self.settings.poa_packaging_bucket)
+                
+                print subfolder_name
+                s3_key_names = self.get_poa_s3_key_names(doi_id, version)
+                print len(s3_key_names)
+                print s3_key_names
+                
+                self.download_s3_key_names_to_subfolder(bucket, s3_key_names, subfolder_name)
         
     def download_vor_files_from_s3(self, doi_id):
         """
@@ -928,26 +1022,69 @@ class activity_RezipArticle(activity.activity):
             
         return (fid, status, version)
     
+    def max_poa_version_number_from_folders(self, input_dir):
+        """
+        Look at the folder names in the input_dir, and figure out
+        the highest PoA version number based on their names
+        """
+        max_poa_version = None
+        
+        for folder_name in self.folder_list(input_dir):
+            if '_' in self.folder_name_from_name(input_dir, folder_name):
+                poa_version = self.folder_name_from_name(input_dir, folder_name).split('_v')[-1]
+                if max_poa_version is None:
+                    max_poa_version = int(poa_version)
+                else:
+                    if int(poa_version) > max_poa_version:
+                        max_poa_version = int(poa_version)
+        
+        return max_poa_version
+    
     def version_number(self, input_dir, folder):
         
-        # Version is hacky at the moment for test data only
-        version = None
+        # Version depends on the folder of interest and
+        #  all the folders for this article
+        
+        version_type = None
+        vor_version = None
+        poa_version = None
+        max_poa_version = self.max_poa_version_number_from_folders(input_dir)
+        
+        # If the folder name contains underscore, then we want the PoA version number
         if '_' in self.folder_name_from_name(input_dir, folder):
+            version_type = 'poa'
             if self.folder_name_from_name(input_dir, folder).split('_')[-1] == 'v1':
-                version = 1
+                poa_version = 1
             elif self.folder_name_from_name(input_dir, folder).split('_')[-1] == 'v2':
-                version = 2
-            else:
-                version = 1
+                poa_version = 2
+            elif self.folder_name_from_name(input_dir, folder).split('_')[-1] == 'v3':
+                poa_version = 3
+            elif self.folder_name_from_name(input_dir, folder).split('_')[-1] == 'v4':
+                poa_version = 4
         else:
-            if self.folder_name_from_name(input_dir, folder) == '06250':
-                version = 3
-            elif self.folder_name_from_name(input_dir, folder) == '04525':
-                version = 2
-            else:
-                version = 1
+            # We want the VoR version number
+            version_type = 'vor'
                 
-        return version
+        if max_poa_version is None and poa_version is None:
+            vor_version = 1
+        else:
+            vor_version = max_poa_version + 1
+        
+        if(self.logger):
+            self.logger.info('input_dir: ' + input_dir)
+            self.logger.info('folder: ' + folder)
+            self.logger.info('version_type: ' + str(version_type))
+            self.logger.info('max_poa_version: ' + str(max_poa_version))
+            self.logger.info('poa_version: ' + str(poa_version))
+            self.logger.info('vor_version: ' + str(vor_version))
+        
+        if version_type == 'vor':
+            return vor_version
+        elif version_type == 'poa':
+            return poa_version
+        else:
+            return None
+
     
     def article_xml_file(self):
         for file_name in self.file_list(self.TMP_DIR):
