@@ -949,6 +949,9 @@ class activity_RezipArticle(activity.activity):
         total = xmlio.convert_xlink_href(root, file_name_map)
         # TODO - compare whether all file names were converted
         
+        # Update or change JATS dtd-schema version
+        self.dtd_version_to_xml(root)
+        
         # For PoA, 
         soup = self.article_soup(self.article_xml_file())
         if parser.is_poa(soup) and parser.pub_date(soup) is None:
@@ -969,6 +972,9 @@ class activity_RezipArticle(activity.activity):
         f.write(reparsed_string)
         f.close()
     
+    def dtd_version_to_xml(self, root):
+        root.set('dtd-version', '1.1d3')
+
     def add_pub_date_to_xml(self, doi_id, root):
         
         # Get the date for the first version
