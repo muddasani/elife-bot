@@ -676,7 +676,8 @@ class activity_RezipArticle(activity.activity):
         """
         # Here we want to set the parentage differently for videos
         #  because those items are their own parents, in a way
-        if 'type' in item and item['type'] == 'media' and 'mimetype' in item:
+        if ('type' in item and item['type'] == 'media'
+            and 'mimetype' in item and item['mimetype'] == 'video'):
             first_parent_level = ''
             second_parent_level = 'parent_'
             third_parent_level = 'p_parent_'
