@@ -744,10 +744,10 @@ class activity_RezipArticle(activity.activity):
 
         if asset:
             new_filename = self.add_filename_asset(new_filename, asset, ordinal)
-            new_filename = self.add_filename_version(new_filename, version)
-    
-    
-            new_filename += new_extension
+        
+        # Add version number and file extension
+        new_filename = self.add_filename_version(new_filename, version)
+        new_filename += new_extension
     
         return new_filename
     
