@@ -122,6 +122,12 @@ class activity_RezipArticle(activity.activity):
             file_name_map = self.rename_files(self.journal, fid, status,
                                               version, self.article_xml_file())
             
+            # If there are EPS files, then replace them with tif files now
+            if self.has_eps_files_in_output_dir() and status == 'vor':
+                if(self.logger):
+                    self.logger.info("vor has eps files " + str(fid))
+                file_name_map = self.download_and_replace_eps_with_tif(fid, version, file_name_map)
+            
             (verified, renamed_list, not_renamed_list) = self.verify_rename_files(file_name_map)
             if(self.logger):
                 self.logger.info("verified " + folder + ": " + str(verified))
@@ -423,6 +429,82 @@ class activity_RezipArticle(activity.activity):
                 s3key.set_contents_from_filename(file, replace=True)
                 if(self.logger):
                     self.logger.info("uploaded " + s3_key_name + " to s3 bucket " + bucket_name)
+
+    def has_eps_files_in_output_dir(self):
+        # Check if there are EPS files
+        found_eps = False
+
+        for file in self.file_list(self.OUTPUT_DIR):
+            if file.split('.')[-1] == 'eps':
+                found_eps = True
+        return found_eps
+    
+    def download_and_replace_eps_with_tif(self, doi_id, version, file_name_map):
+        """
+        We know the article has EPS files, then we will download TIF files from S3
+        to replace them, rename the files to reflect the correct VoR version number,
+        and delete the old EPS files (that are EPS figures - do not delete EPS supplemental files,
+        of which there is only one known so far)
+        """
+        # Download TIF files
+        self.download_tif_files_from_s3(doi_id)
+        
+        # Move TIF files from INPUT_DIR to TMP_DIR
+        subfolder_name = str(doi_id).zfill(5)
+        input_dir_subfolder_name = self.INPUT_DIR + os.sep + subfolder_name
+        
+        version_string = "v" + str(version)
+        for file in self.file_list(input_dir_subfolder_name):
+            if file.split('.')[-1] == 'tif':
+                # Replace v1 with the correct vX in the file name
+                filename = self.file_name_from_name(file)
+                new_name = filename.replace("v1", version_string)
+                if(self.logger):
+                    self.logger.info('using TIF file ' + new_name)
+                shutil.move(file, self.OUTPUT_DIR + os.sep + new_name)
+
+        # Delete unwanted EPS files
+        for file in self.file_list(self.OUTPUT_DIR):
+            if file.split('.')[-1] == 'eps':
+                filename = self.file_name_from_name(file)
+                tif_file = file.replace('.eps', '.tif')
+                tif_filename = self.file_name_from_name(tif_file)
+
+                # Check if the TIF file exists first, if so then delete the EPS version
+                #  and update the file name in the file_name_map
+                if os.path.isfile(tif_file):
+                    if(self.logger):
+                        self.logger.info('moving file to junk dir ' + filename)
+                    shutil.move(file, self.JUNK_DIR + os.sep + filename)
+                    # Rename it in the file_name_map
+                    for k,v in file_name_map.iteritems():
+                        if v == filename:
+                            file_name_map[k] = tif_filename
+        
+        return file_name_map
+    
+    def download_tif_files_from_s3(self, doi_id):
+        if(self.logger):
+            self.logger.info('downloading TIF files for doi ' + str(doi_id))
+        
+        subfolder_name = str(doi_id).zfill(5)
+        prefix = subfolder_name + '/'
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(self.eps_output_bucket)
+
+        # get item list from S3
+        s3_key_names = s3lib.get_s3_key_names_from_bucket(
+            bucket = bucket,
+            prefix = prefix)
+        
+        # Remove the prefix itself, is also a key it seems
+        if prefix in s3_key_names:
+            s3_key_names.remove(prefix)
+   
+        self.download_s3_key_names_to_subfolder(bucket, s3_key_names, subfolder_name)
+    
 
     def convert_eps_files(self):
         """
