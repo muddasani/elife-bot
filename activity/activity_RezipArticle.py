@@ -188,7 +188,7 @@ class activity_RezipArticle(activity.activity):
     def download_files_from_s3(self, doi_id):
         
         # VoR file download
-        self.download_vor_files_from_s3(doi_id)
+        #self.download_vor_files_from_s3(doi_id)
         
         # PoA download
         # Instantiate a new article object
@@ -1021,8 +1021,7 @@ class activity_RezipArticle(activity.activity):
         return (verified, renamed_list, not_renamed_list)
     
     def convert_xml(self, doi_id, xml_file, file_name_map):
-        # TODO
-        
+
         # Register namespaces
         xmlio.register_xmlns()
         
@@ -1040,6 +1039,8 @@ class activity_RezipArticle(activity.activity):
         if parser.is_poa(soup) and parser.pub_date(soup) is None:
             # add the published date to the XML
             root = self.add_pub_date_to_xml(doi_id, root)
+            # add the volume number
+            root = self.add_volume_to_xml(self.poa_volume(doi_id), root)
             # set the article-id, to overwrite the v2, v3 value if present
             root = self.set_article_id_xml(doi_id, root)
             # if ds.zip file is there, then add it to the xml
@@ -1081,6 +1082,42 @@ class activity_RezipArticle(activity.activity):
         
         return root
     
+    def poa_volume(self, doi_id):
+        """
+        Return the numeric volume number for this DOI, for PoA articles,
+        by looking at the PoA database
+        """
+        volume = None
+        # Get the date for the first version
+        date_str = self.get_poa_date_str_for_version(doi_id, version = 1)
+        if date_str:
+            date_struct = time.strptime(date_str,  "%Y%m%d")
+            if date_struct:
+                volume = int(date_struct[0]) - 2011
+        return volume
+        
+    
+    def add_volume_to_xml(self, volume, root):
+        if volume is None:
+            return
+        
+        # Create the pub-date XML tag
+        volume_tag = self.volume_xml_element(volume)
+
+        # Add the tag to the XML
+        for tag in root.findall('./front/article-meta'):
+            parent_tag_index = xmlio.get_first_element_index(tag, 'elocation-id')
+            if not parent_tag_index:
+                if(self.logger):
+                    self.logger.info('no elocation-id tag and no volume added: ' + str(doi_id))
+            else:
+                tag.insert( parent_tag_index - 1, volume_tag)
+                
+            # Should only do it once but ensure it is only done once
+            break
+        
+        return root
+    
     def pub_date_xml_element(self, pub_date):
         
         pub_date_tag = Element("pub-date")
@@ -1097,6 +1134,13 @@ class activity_RezipArticle(activity.activity):
         year.text = str(pub_date.tm_year)
     
         return pub_date_tag
+    
+    def volume_xml_element(self, volume):
+        
+        tag = Element("volume")
+        tag.text = str(volume)
+
+        return tag
     
     def set_article_id_xml(self, doi_id, root):
         
