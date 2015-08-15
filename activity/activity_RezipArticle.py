@@ -66,6 +66,7 @@ class activity_RezipArticle(activity.activity):
         self.output_bucket = "elife-articles-renamed"
         # Temporarily upload to a folder during development
         self.output_bucket_folder = "samples04/"
+        self.output_article_xml_bucket_folder = "samples04/article-xml/"
         
         # EPS file bucket
         self.eps_output_bucket = "elife-eps-renamed"
@@ -148,6 +149,7 @@ class activity_RezipArticle(activity.activity):
             
             if verified and zip_file_name:
                 self.upload_article_zip_to_s3()
+                self.upload_article_xml_to_s3()
             
             # Convert EPS files
             # self.convert_eps_files()
@@ -188,7 +190,7 @@ class activity_RezipArticle(activity.activity):
     def download_files_from_s3(self, doi_id):
         
         # VoR file download
-        #self.download_vor_files_from_s3(doi_id)
+        self.download_vor_files_from_s3(doi_id)
         
         # PoA download
         # Instantiate a new article object
@@ -224,7 +226,7 @@ class activity_RezipArticle(activity.activity):
         """
         dom = self.poa_file_sdb_domain()
         query = ("select count(*) from " + self.simpledb_domain_name
-                    + " where doi_id = '" + str(doi_id) + "'")
+                    + " where doi_id = '" + str(int(doi_id)) + "'")
         
         if(self.logger):
             self.logger.info(query)
@@ -243,7 +245,7 @@ class activity_RezipArticle(activity.activity):
         """
         dom = self.poa_file_sdb_domain()
         query = ("select count(*) from " + self.simpledb_domain_name
-                    + " where doi_id = '" + str(doi_id) + "'"
+                    + " where doi_id = '" + str(int(doi_id)) + "'"
                     + " and version = '" + str(version) + "'")
         
         if(self.logger):
@@ -263,7 +265,7 @@ class activity_RezipArticle(activity.activity):
         """
         dom = self.poa_file_sdb_domain()
         query = ("select date_str from " + self.simpledb_domain_name
-                    + " where doi_id = '" + str(doi_id) + "'"
+                    + " where doi_id = '" + str(int(doi_id)) + "'"
                     + " and version = '" + str(version) + "'"
                     + " and file_type = 'xml' and date_str is not null "
                     + " order by date_str desc limit 1")
@@ -278,13 +280,34 @@ class activity_RezipArticle(activity.activity):
         # default
         return None
     
+    def get_vor_date_str_for_version(self, doi_id, version):
+        """
+        VoR file date string, for now just get the date updated
+        on the xml.zip file in the S3 bucket
+        """
+        date_str = None
+        
+        subfolder_name = str(doi_id).zfill(5)
+        prefix = subfolder_name + '/'
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(self.article_bucket)
+        
+        s3_key = bucket.get_key(prefix)
+        if s3_key:
+            date_struct = time.strptime(s3_key.last_modified, '%a, %d %b %Y %H:%M:%S %Z')
+            date_str = time.strftime("%Y%m%d", date_struct)
+
+        return date_str
+    
     def get_poa_s3_key_names_from_db(self, doi_id, version, date_str):
         
         s3_key_names = []
         
         dom = self.poa_file_sdb_domain()
         query = ("select * from " + self.simpledb_domain_name
-                    + " where doi_id = '" + str(doi_id) + "'"
+                    + " where doi_id = '" + str(int(doi_id)) + "'"
                     + " and version = '" + str(version) + "'"
                     + " and date_str = '" + str(date_str) + "'")
 
@@ -406,6 +429,28 @@ class activity_RezipArticle(activity.activity):
             s3key.set_contents_from_filename(file, replace=True)
             if(self.logger):
                 self.logger.info("uploaded " + s3_key_name + " to s3 bucket " + bucket_name)
+
+    def upload_article_xml_to_s3(self):
+        """
+        Upload the article xml to S3
+        """
+        
+        bucket_name = self.output_bucket
+        bucket_folder_name = self.output_article_xml_bucket_folder
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+        
+        file = self.article_xml_file()
+
+        s3_key_name = bucket_folder_name + file.split(os.sep)[-1]
+        s3key = boto.s3.key.Key(bucket)
+        s3key.key = s3_key_name
+        s3key.set_contents_from_filename(file, replace=True)
+        if(self.logger):
+            self.logger.info("uploaded " + s3_key_name + " to s3 bucket " +
+                             bucket_name + ", " + bucket_folder_name + " folder")
 
     def copy_files_to_s3(self, dir_name, file_extension):
         """
@@ -1195,6 +1240,12 @@ class activity_RezipArticle(activity.activity):
         filename = self.add_filename_fid(filename, fid)
         filename = self.add_filename_status(filename, status)
         filename = self.add_filename_version(filename, version)
+        if status == 'poa':
+            if self.get_poa_date_str_for_version(fid, version):
+                filename += "-" + self.get_poa_date_str_for_version(fid, version)
+        elif status == 'vor':
+            if self.get_vor_date_str_for_version(fid, version):
+                filename += "-" + self.get_vor_date_str_for_version(fid, version)
         filename += '.zip'
         return filename
     
