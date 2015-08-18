@@ -1232,6 +1232,9 @@ class activity_RezipArticle(activity.activity):
         supp_tag = Element("supplementary-material")
         ext_link_tag = SubElement(supp_tag, "ext-link")
         ext_link_tag.set("xlink:href", file_name)
+        ext_link_tag.text = "Download zip"
+        p_tag = SubElement(supp_tag, "p")
+        p_tag.text = "Any figures and tables for this article are included in the PDF. The zip folder contains additional supplemental files."
         return supp_tag
 
     
