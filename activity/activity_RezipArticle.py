@@ -1079,6 +1079,9 @@ class activity_RezipArticle(activity.activity):
         # Update or change JATS dtd-schema version
         self.dtd_version_to_xml(root)
         
+        # Capitalise subject group values in article categories
+        root = self.subject_group_convert_in_xml(root)
+        
         # For PoA, 
         soup = self.article_soup(self.article_xml_file())
         if parser.is_poa(soup) and parser.pub_date(soup) is None:
@@ -1103,6 +1106,23 @@ class activity_RezipArticle(activity.activity):
     
     def dtd_version_to_xml(self, root):
         root.set('dtd-version', '1.1d3')
+
+    def subject_group_convert_in_xml(self, root):
+        """
+        Convert capitalisation of <subject> tags in article categories
+        """
+        for tag in root.findall('./front/article-meta/article-categories/subj-group'):
+            for subject_tag in tag.findall('./subject'):
+                subject_tag.text = self.title_case(subject_tag.text)
+        return root
+
+    def title_case(self, string):
+        ignore_words = ['and']
+        word_list = string.split(' ')
+        for i, word in enumerate(word_list):
+            if word.lower() not in ignore_words:
+                word_list[i] = word.capitalize()
+        return ' '.join(word_list)
 
     def add_pub_date_to_xml(self, doi_id, root):
         
