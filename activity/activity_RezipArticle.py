@@ -741,7 +741,7 @@ class activity_RezipArticle(activity.activity):
             
             folder_name_only = folder_name.split(os.sep)[-1]
             zip_file_name = folder_name_only + '.zip'
-            new_zipfile = zipfile.ZipFile(self.OUTPUT_DIR + os.sep + zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+            new_zipfile = zipfile.ZipFile(self.TMP_DIR + os.sep + zip_file_name, 'w', zipfile.ZIP_DEFLATED)
             
             # Read all files in all subfolders and add them to the new zip file
             for root, dirs, files in os.walk(folder_name):
