@@ -116,6 +116,7 @@ class activity_RezipArticle(activity.activity):
                 self.logger.info('processing files in folder ' + folder)
             
             self.unzip_article_files(self.file_list(folder))
+            self.rezip_article_folders()
     
             (fid, status, version) = self.profile_article(self.INPUT_DIR, folder)
             
@@ -729,6 +730,34 @@ class activity_RezipArticle(activity.activity):
                     self.logger.info("not approved for repackaging " + file_name)
                 self.unzip_or_move_file(file_name, self.JUNK_DIR, do_unzip = False)
     
+    def rezip_article_folders(self):
+        
+        # Check for any folders in TMP_DIR, and zip them if found
+        #  these are likely to be .zip files in the article XML but were
+        #  not supplied to S3 as a zip within a zip
+        for folder_name in self.folder_list(self.TMP_DIR):
+            if(self.logger):
+                self.logger.info("found a folder in the tmp_dir to be rezipped " + folder_name)
+            
+            folder_name_only = folder_name.split(os.sep)[-1]
+            zip_file_name = folder_name_only + '.zip'
+            new_zipfile = zipfile.ZipFile(self.OUTPUT_DIR + os.sep + zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+            
+            # Read all files in all subfolders and add them to the new zip file
+            for root, dirs, files in os.walk(folder_name):
+                for name in files:
+                    # df = path to the file on disk
+                    df = os.path.join(root, name)
+                    # filename = folder + file name we want in the zip file
+                    filename = df.split(folder_name)[-1]
+                    
+                    if(self.logger):
+                        self.logger.info("df: " + df)
+                        self.logger.info("filename: " + filename)
+                        
+                    new_zipfile.write(df, filename)
+            new_zipfile.close()
+    
     def add_filename_fid(self, filename, fid):
         return filename + '-' + str(fid).zfill(5)
         
@@ -1020,7 +1049,8 @@ class activity_RezipArticle(activity.activity):
         
         # Ignore these files we do not want them anymore
         ignore_files = ['elife05087s001.docx', 'elife05087s002.docx']
-        
+                    
+        # Get a list of all files
         dirfiles = self.file_list(self.TMP_DIR)
         
         soup = self.article_soup(xml_file)
