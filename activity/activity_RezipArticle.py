@@ -1112,6 +1112,9 @@ class activity_RezipArticle(activity.activity):
         # Capitalise subject group values in article categories
         root = self.subject_group_convert_in_xml(root)
         
+        # Wrap citation collab tags in person-group if they are not already
+        root = self.element_citation_collab_wrap_in_xml(root)
+    
         # For PoA, 
         soup = self.article_soup(self.article_xml_file())
         if parser.is_poa(soup) and parser.pub_date(soup) is None:
@@ -1144,6 +1147,32 @@ class activity_RezipArticle(activity.activity):
         for tag in root.findall('./front/article-meta/article-categories/subj-group'):
             for subject_tag in tag.findall('./subject'):
                 subject_tag.text = self.title_case(subject_tag.text)
+        return root
+
+    def element_citation_collab_wrap_in_xml(self, root):
+        """
+        turn <element-citation><collab> into
+        <element-citation><person-group person-group-type="author"><collab>
+        """
+        for citation_tag in root.findall('./back/ref-list/ref/element-citation'):
+            person_group_tag = None
+            if len(citation_tag.findall('./collab')) > 0:
+                person_group_tag = Element("person-group")
+                person_group_tag.set("person-group-type", "author")
+                collab_tag_index = xmlio.get_first_element_index(citation_tag, 'collab')
+
+            for collab_tag in citation_tag.findall('./collab'):
+
+                new_collab_tag = SubElement(person_group_tag, "collab")
+                new_collab_tag.text = collab_tag.text
+
+                # Delete the old tag
+                citation_tag.remove(collab_tag)
+                
+            # Insert the new person-group tag
+            if person_group_tag is not None:
+                citation_tag.insert( collab_tag_index - 1, person_group_tag)
+                
         return root
 
     def title_case(self, string):
