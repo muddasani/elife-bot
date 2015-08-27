@@ -1204,7 +1204,7 @@ class activity_RezipArticle(activity.activity):
         tagged_text = tagged_text.replace('</kwd>','')
         tagged_text = tagged_text.replace('<italic>','')
         tagged_text = tagged_text.replace('</italic>','')
-        string_lower = tagged_text.lower()
+        string_lower = tagged_text.lower().strip()
         return string_lower
     
     def new_research_organism_xml(self, string):
