@@ -1217,7 +1217,8 @@ class activity_RezipArticle(activity.activity):
         
         match_list = {}
         
-        match_list['arabidopsis'] = '<kwd><italic>Arabidopsis</italic></kwd>'
+        match_list['arabidopsis'] = '<kwd><italic>A. thaliana</italic></kwd>'
+        match_list['bat'] = '<kwd>Bat</kwd>'
         match_list['b. subtilis'] = '<kwd><italic>B. subtilis</italic></kwd>'
         match_list['c. elegans'] = '<kwd><italic>C. elegans</italic></kwd>'
         match_list['c. intestinalis'] = '<kwd><italic>C. intestinalis</italic></kwd>'
@@ -1230,7 +1231,7 @@ class activity_RezipArticle(activity.activity):
         match_list['frog'] = '<kwd>Frog</kwd>'
         match_list['fruit fly'] = '<kwd><italic>D. melanogaster</italic></kwd>'
         match_list['human'] = '<kwd>Human</kwd>'
-        match_list['macaca mulatta'] = '<kwd><italic>M. mulatta</italic></kwd>'
+        match_list['macaca mulatta'] = '<kwd>Rhesus macaque</kwd>'
         match_list['maize'] = '<kwd>Maize</kwd>'
         match_list['mouse'] = '<kwd>Mouse</kwd>'
         match_list['myceliophthora thermophila'] = '<kwd><italic>M. thermophila</italic></kwd>'
@@ -1244,7 +1245,7 @@ class activity_RezipArticle(activity.activity):
         match_list['rat'] = '<kwd>Rat</kwd>'
         match_list['s. cerevisiae'] = '<kwd><italic>S. cerevisiae</italic></kwd>'
         match_list['s. pombe'] = '<kwd><italic>S. pombe</italic></kwd>'
-        match_list['salmonella enterica serovar typhi'] = '<kwd><italic>S. enterica serovar</italic> Typhi</kwd>'
+        match_list['salmonella enterica serovar typhi'] = '<kwd><italic>S. enterica</italic> serovar Typhi</kwd>'
         match_list['streptococcus pyogenes'] = '<kwd><italic>S. pyogenes</italic></kwd>'
         match_list['viruses'] = '<kwd>Virus</kwd>'
         match_list['volvox'] = '<kwd><italic>Volvox</italic></kwd>'
