@@ -683,7 +683,6 @@ class activity_RezipArticle(activity.activity):
         If file the extension 
         """
         if (self.file_extension(file_name) == 'zip'
-            and self.is_poa_ds_file(file_name) is False
             and do_unzip is True):
             # Unzip
             if(self.logger):
@@ -696,6 +695,14 @@ class activity_RezipArticle(activity.activity):
             if(self.logger):
                 self.logger.info("going to move and not unzip " + file_name + " to " + to_dir)
             shutil.copyfile(file_name, to_dir + os.sep + self.file_name_from_name(file_name))
+            
+        # Clean up after unzipping a PoA supp.zip file by moving the manifest.xml file
+        if (self.file_extension(file_name) == 'zip'
+            and self.is_poa_ds_file(file_name) is True
+            and do_unzip is True):
+            if(self.logger):
+                self.logger.info("moving PoA zip manifest.xml to the junk folder")
+            shutil.move(to_dir + os.sep + 'manifest.xml', self.JUNK_DIR + os.sep + 'manifest.xml')
     
     
     def is_poa_ds_file(self, file_name):
@@ -815,7 +822,7 @@ class activity_RezipArticle(activity.activity):
                 new_filename = self.add_filename_version(new_filename, version)
                 new_filename += '.pdf'
                 
-        if old_filename.endswith('_ds.zip'):
+        if old_filename.endswith('_ds.zip') or old_filename.endswith('_Supplemental_files.zip'):
             # PoA digital supplement file
             # TODO - may want to unwrap the zip and rename its child zip
             new_filename = journal
