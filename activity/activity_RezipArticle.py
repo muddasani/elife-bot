@@ -27,6 +27,7 @@ from elifetools import xmlio
 
 from wand.image import Image
 
+from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 
 """
@@ -1112,6 +1113,9 @@ class activity_RezipArticle(activity.activity):
         # Capitalise subject group values in article categories
         root = self.subject_group_convert_in_xml(root)
         
+        # Convert research organism kwd tags
+        root = self.research_organism_kwd_convert_in_xml(root, doi_id)
+        
         # Wrap citation collab tags in person-group if they are not already
         root = self.element_citation_collab_wrap_in_xml(root)
     
@@ -1148,6 +1152,103 @@ class activity_RezipArticle(activity.activity):
             for subject_tag in tag.findall('./subject'):
                 subject_tag.text = self.title_case(subject_tag.text)
         return root
+    
+    def research_organism_kwd_convert_in_xml(self, root, doi_id):
+        """
+        Convert capitalisation of <subject> tags in article categories
+        Basic procedure,
+          Look for research organisms kwd-group tag
+          Read each kwd tag inside it, and get replacement XML if applicable
+          Insert the new kwd tag 
+          Remove the old kwd tag
+        """
+        for kwd_group_tag in root.findall('./front/article-meta/kwd-group[@kwd-group-type="research-organism"]'):
+
+            # Start the insertion index where the first kwd element is found
+            tag_index = xmlio.get_first_element_index(kwd_group_tag, 'kwd')
+            
+            for kwd_tag in kwd_group_tag.findall('.//kwd'):
+                new_xml = self.new_research_organism_xml(self.kwd_xml_to_string_lower(kwd_tag))
+                if not new_xml:
+                    # No match returned, use the original value
+                    new_xml = ElementTree.tostring(kwd_tag)
+                    if(self.logger):
+                        self.logger.info('no kwd replacement match for: ' + str(doi_id))
+                        self.logger.info(new_xml)
+
+                # Parse XML string into an XML element
+                new_kwd_tag = ElementTree.fromstring(new_xml)
+                # Insert the new tag
+                kwd_group_tag.insert(tag_index, new_kwd_tag)
+                # Remove the old tag
+                kwd_group_tag.remove(kwd_tag)
+                tag_index += 1
+
+        return root
+
+    def kwd_xml_to_string_lower(self, tag):
+        """
+        Given an Element, convert its contents to string,
+        remove text for tags we do not want, convert it to lowercase
+        and return it
+        """
+        tagged_text = ElementTree.tostring(tag)
+        tagged_text = tagged_text.replace('<kwd>','')
+        tagged_text = tagged_text.replace('</kwd>','')
+        tagged_text = tagged_text.replace('<italic>','')
+        tagged_text = tagged_text.replace('</italic>','')
+        string_lower = tagged_text.lower()
+        return string_lower
+    
+    def new_research_organism_xml(self, string):
+        """
+        Given an lower case string of text only for a
+        research organism kwd value, return a string
+        of tagged XML as the replacment, otherwise return None
+        """
+        xml_string = None
+        
+        match_list = {}
+        
+        match_list['arabidopsis'] = '<kwd><italic>Arabidopsis</italic></kwd>'
+        match_list['b. subtilis'] = '<kwd><italic>B. subtilis</italic></kwd>'
+        match_list['c. elegans'] = '<kwd><italic>C. elegans</italic></kwd>'
+        match_list['c. intestinalis'] = '<kwd><italic>C. intestinalis</italic></kwd>'
+        match_list['chicken'] = '<kwd>Chicken</kwd>'
+        match_list['ciona intestinalis'] = '<kwd><italic>C. intestinalis</italic></kwd>'
+        match_list['d. melanogaster'] = '<kwd><italic>D. melanogaster</italic></kwd>'
+        match_list['dictyostelium'] = '<kwd><italic>Dictyostelium</italic></kwd>'
+        match_list['drosophila melanogaster'] = '<kwd><italic>D. melanogaster</italic></kwd>'
+        match_list['e. coli'] = '<kwd><italic>E. coli</italic></kwd>'
+        match_list['frog'] = '<kwd>Frog</kwd>'
+        match_list['fruit fly'] = '<kwd><italic>D. melanogaster</italic></kwd>'
+        match_list['human'] = '<kwd>Human</kwd>'
+        match_list['macaca mulatta'] = '<kwd><italic>M. mulatta</italic></kwd>'
+        match_list['maize'] = '<kwd>Maize</kwd>'
+        match_list['mouse'] = '<kwd>Mouse</kwd>'
+        match_list['myceliophthora thermophila'] = '<kwd><italic>M. thermophila</italic></kwd>'
+        match_list['n. crassa'] = '<kwd><italic>N. crassa</italic></kwd>'
+        match_list['neurospora'] = '<kwd><italic>Neurospora</italic></kwd>'
+        match_list['none'] = '<kwd>None</kwd>'
+        match_list['oncopeltus fasciatus'] = '<kwd><italic>O. fasciatus</italic></kwd>'
+        match_list['other'] = '<kwd>Other</kwd>'
+        match_list['plasmodium falciparum'] = '<kwd><italic>P. falciparum</italic></kwd>'
+        match_list['platynereis dumerilii'] = '<kwd><italic>P. dumerilii</italic></kwd>'
+        match_list['rat'] = '<kwd>Rat</kwd>'
+        match_list['s. cerevisiae'] = '<kwd><italic>S. cerevisiae</italic></kwd>'
+        match_list['s. pombe'] = '<kwd><italic>S. pombe</italic></kwd>'
+        match_list['salmonella enterica serovar typhi'] = '<kwd><italic>S. enterica serovar</italic> Typhi</kwd>'
+        match_list['streptococcus pyogenes'] = '<kwd><italic>S. pyogenes</italic></kwd>'
+        match_list['viruses'] = '<kwd>Virus</kwd>'
+        match_list['volvox'] = '<kwd><italic>Volvox</italic></kwd>'
+        match_list['xenopus'] = '<kwd><italic>Xenopus</italic></kwd>'
+        match_list['yellow baboon (papio cynocephalus)'] = '<kwd><italic>P. cynocephalus</italic></kwd>'
+        match_list['zebrafish'] = '<kwd>Zebrafish</kwd>'
+        
+        if match_list.get(string):
+            xml_string = match_list.get(string)
+        
+        return xml_string
 
     def element_citation_collab_wrap_in_xml(self, root):
         """
