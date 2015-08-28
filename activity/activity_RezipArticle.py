@@ -116,7 +116,7 @@ class activity_RezipArticle(activity.activity):
             if(self.logger):
                 self.logger.info('processing files in folder ' + folder)
             
-            self.unzip_article_files(self.file_list(folder))
+            self.unzip_article_files(self.file_list(folder), fid)
             self.rezip_article_folders()
     
             (fid, status, version) = self.profile_article(self.INPUT_DIR, folder)
@@ -823,14 +823,19 @@ class activity_RezipArticle(activity.activity):
         return False
     
     
-    def unzip_article_files(self, file_list):
+    def unzip_article_files(self, file_list, doi_id):
         
         for file_name in file_list:
-            if self.approve_file(file_name):
+            if self.approve_file(file_name, doi_id):
                 if(self.logger):
                     self.logger.info("unzipping or moving file " + file_name)
                 self.unzip_or_move_file(file_name, self.TMP_DIR)
-                folder_name = self.folder_name_from_name(self.INPUT_DIR, file_name)
+
+            # Special case for 04493 PoA
+            elif int(doi_id) == 4493 and file_name endswith('.zip'):
+                # Video .zip files, can use as is, do not unzip
+                self.unzip_or_move_file(file_name, self.TMP_DIR, do_unzip = False)
+                
             else:
                 if(self.logger):
                     self.logger.info("not approved for repackaging " + file_name)
@@ -928,6 +933,11 @@ class activity_RezipArticle(activity.activity):
             new_filename += '-supp'
             new_filename = self.add_filename_version(new_filename, version)
             new_filename += '.zip'
+            
+        # Special case for 04493 files
+        if int(fid) == 4493 and old_filename.endswith('.zip') and new_filename is None:
+            # A PoA 04493 video file, that is not a supp.zip file use it as is
+            new_filename = old_filename
     
         return new_filename
     
@@ -1518,9 +1528,11 @@ class activity_RezipArticle(activity.activity):
         supp_tag = Element("supplementary-material")
         ext_link_tag = SubElement(supp_tag, "ext-link")
         ext_link_tag.set("xlink:href", file_name)
-        ext_link_tag.text = "Download zip"
-        p_tag = SubElement(supp_tag, "p")
-        p_tag.text = "Any figures and tables for this article are included in the PDF. The zip folder contains additional supplemental files."
+        if 'supp' in file_name:
+            # Only add link text and paragraph for supp.zip files, and not for 04493 video files
+            ext_link_tag.text = "Download zip"
+            p_tag = SubElement(supp_tag, "p")
+            p_tag.text = "Any figures and tables for this article are included in the PDF. The zip folder contains additional supplemental files."
         return supp_tag
 
     
