@@ -826,7 +826,7 @@ class activity_RezipArticle(activity.activity):
     def unzip_article_files(self, file_list, doi_id):
         
         for file_name in file_list:
-            if self.approve_file(file_name, doi_id):
+            if self.approve_file(file_name):
                 if(self.logger):
                     self.logger.info("unzipping or moving file " + file_name)
                 self.unzip_or_move_file(file_name, self.TMP_DIR)
