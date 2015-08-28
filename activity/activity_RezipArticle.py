@@ -372,6 +372,52 @@ class activity_RezipArticle(activity.activity):
             pass
         else:
             self.download_poa_ds_zip_for_previous_version(doi_id, version, bucket, subfolder_name)
+            
+        # Edge case for article 04493
+        if int(doi_id) == 4493:
+            self.download_extra_poa_files_for_4493(doi_id, version, subfolder_name)
+            
+    def download_extra_poa_files_for_4493(self, doi_id, version, subfolder_name):
+        """
+        Extra video files for PoA version of article 04493
+        """
+        bucket_name = 'elife-poa-packaging-dev'
+        folder_name = 'Videos for one off PoA article/'
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(bucket_name)
+        
+        # get item list from S3
+        s3_key_names = s3lib.get_s3_key_names_from_bucket(
+            bucket = bucket,
+            prefix = folder_name)
+        
+        # Remove the prefix itself, is also a key it seems
+        if folder_name in s3_key_names:
+            s3_key_names.remove(folder_name)
+   
+        self.download_s3_key_names_to_subfolder(bucket, s3_key_names, subfolder_name)
+        
+        # Zip each file
+        for s3_key_name in s3_key_names:
+            file_name = s3_key_name.split(folder_name)[1]
+            file_name_plus_path = subfolder_name + os.sep + file_name
+            
+            zip_file_name = file_name.split('.')[0].replace(' ', '_') + '.zip'
+            zip_file_name_plus_path = subfolder_name + os.sep + zip_file_name
+            
+            if(self.logger):
+                self.logger.info('zipping ' + file_name_plus_path + ' to '
+                                 + zip_file_name_plus_path)
+            
+            # Add to zip
+            new_zipfile = zipfile.ZipFile(zip_file_name_plus_path, 'w', zipfile.ZIP_DEFLATED)
+            new_zipfile.write(file_name_plus_path, file_name)
+            new_zipfile.close()
+            
+            # Move old file to junk dir
+            shutil.move(file_name_plus_path, self.JUNK_DIR + os.sep + file_name)
         
     def download_poa_ds_zip_for_previous_version(self, doi_id, version, bucket, subfolder_name):
         """
