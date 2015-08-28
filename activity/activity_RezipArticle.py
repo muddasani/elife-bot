@@ -397,15 +397,20 @@ class activity_RezipArticle(activity.activity):
         if folder_name in s3_key_names:
             s3_key_names.remove(folder_name)
    
-        self.download_s3_key_names_to_subfolder(bucket, s3_key_names, subfolder_name)
-        
-        # Zip each file
+
+        # Download, Zip and delete each file separately
         for s3_key_name in s3_key_names:
+            
+            # Download one file
+            if(self.logger):
+                self.logger.info('downloading ' + s3_key_name)
+            self.download_s3_key_names_to_subfolder(bucket, [s3_key_name], subfolder_name)
+        
             file_name = s3_key_name.split(folder_name)[1]
-            file_name_plus_path = subfolder_name + os.sep + file_name
+            file_name_plus_path = self.INPUT_DIR + os.sep + subfolder_name + os.sep + file_name
             
             zip_file_name = file_name.split('.')[0].replace(' ', '_') + '.zip'
-            zip_file_name_plus_path = subfolder_name + os.sep + zip_file_name
+            zip_file_name_plus_path = self.INPUT_DIR + os.sep + subfolder_name + os.sep + zip_file_name
             
             if(self.logger):
                 self.logger.info('zipping ' + file_name_plus_path + ' to '
@@ -416,8 +421,10 @@ class activity_RezipArticle(activity.activity):
             new_zipfile.write(file_name_plus_path, file_name)
             new_zipfile.close()
             
-            # Move old file to junk dir
-            shutil.move(file_name_plus_path, self.JUNK_DIR + os.sep + file_name)
+            # Delete old file because they are very large
+            if(self.logger):
+                self.logger.info('deleting ' + file_name_plus_path)
+            os.remove(file_name_plus_path)
         
     def download_poa_ds_zip_for_previous_version(self, doi_id, version, bucket, subfolder_name):
         """
