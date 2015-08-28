@@ -348,19 +348,64 @@ class activity_RezipArticle(activity.activity):
         for version in versions:
             if self.check_poa_has_version(doi_id, version) is True:
                 # We have a version
-                subfolder_name = str(doi_id).zfill(5) + '_v' + str(version)
-                
-                # Connect to S3 and bucket
-                s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-                bucket = s3_conn.lookup(self.settings.poa_packaging_bucket)
-                
-                s3_key_names = self.get_poa_s3_key_names(doi_id, version)
+                self.download_poa_files_from_s3_for_version(doi_id, version)
 
-                if(self.logger):
-                    self.logger.info('poa subfolder_name name: ' + subfolder_name)
-                    self.logger.info(s3_key_names)
+    
+    def download_poa_files_from_s3_for_version(self, doi_id, version):
+        subfolder_name = str(doi_id).zfill(5) + '_v' + str(version)
+        
+        # Connect to S3 and bucket
+        s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+        bucket = s3_conn.lookup(self.settings.poa_packaging_bucket)
+        
+        s3_key_names = self.get_poa_s3_key_names(doi_id, version)
+
+        if(self.logger):
+            self.logger.info('poa subfolder_name name: ' + subfolder_name)
+            self.logger.info(s3_key_names)
+        
+        self.download_s3_key_names_to_subfolder(bucket, s3_key_names, subfolder_name)
+        
+        # Download a previous ds.zip file if applicable
+        if self.ds_zip_file_name_from_list(s3_key_names):
+            # This has a supp.zip file, do nothing more
+            pass
+        else:
+            self.download_poa_ds_zip_for_previous_version(doi_id, version, bucket, subfolder_name)
+        
+    def download_poa_ds_zip_for_previous_version(self, doi_id, version, bucket, subfolder_name):
+        """
+        Special override for supp.zip files
+        If there is no supp.zip file for this current version, but there is a
+        supp.zip file for a previous version, then download the previous version
+        """
+
+        prev_version = version
+        while prev_version > 0:
+            prev_version = prev_version - 1
+            s3_key_names = self.get_poa_s3_key_names(doi_id, prev_version)
+            if self.ds_zip_file_name_from_list(s3_key_names):
+                # Download the supp.zip file
+                ds_zip_key_names = [self.ds_zip_file_name_from_list(s3_key_names)]
                 
-                self.download_s3_key_names_to_subfolder(bucket, s3_key_names, subfolder_name)
+                if(self.logger):
+                    self.logger.info('poa downloading ds.zip file from version ' + str(prev_version)
+                                     + ' for version ' + str(version))
+                    self.logger.info(ds_zip_key_names)
+                
+                self.download_s3_key_names_to_subfolder(bucket, ds_zip_key_names, subfolder_name)
+                prev_version = 0
+    
+    def ds_zip_file_name_from_list(self, s3_key_names):
+        """
+        Given a list of s3 key names for a PoA article,
+        look for a ds.zip file name
+        """
+        ds_zip_file_name = None
+        for name in s3_key_names:
+            if name.endswith('_ds.zip'):
+                ds_zip_file_name = name
+        return ds_zip_file_name  
         
     def download_vor_files_from_s3(self, doi_id):
         """
