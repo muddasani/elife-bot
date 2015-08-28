@@ -116,7 +116,7 @@ class activity_RezipArticle(activity.activity):
             if(self.logger):
                 self.logger.info('processing files in folder ' + folder)
             
-            self.unzip_article_files(self.file_list(folder), fid)
+            self.unzip_article_files(self.file_list(folder), elife_id)
             self.rezip_article_folders()
     
             (fid, status, version) = self.profile_article(self.INPUT_DIR, folder)
