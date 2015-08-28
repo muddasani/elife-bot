@@ -832,7 +832,7 @@ class activity_RezipArticle(activity.activity):
                 self.unzip_or_move_file(file_name, self.TMP_DIR)
 
             # Special case for 04493 PoA
-            elif int(doi_id) == 4493 and file_name endswith('.zip'):
+            elif int(doi_id) == 4493 and file_name.endswith('.zip'):
                 # Video .zip files, can use as is, do not unzip
                 self.unzip_or_move_file(file_name, self.TMP_DIR, do_unzip = False)
                 
