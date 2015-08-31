@@ -1508,7 +1508,8 @@ class activity_RezipArticle(activity.activity):
         Return it, or return None if it is not there
         """
         for old_name,new_name in file_name_map.iteritems():
-            if self.file_extension(new_name) == 'zip':
+            if (self.file_extension(new_name) == 'zip'
+                and "supp" in new_name):
                 return new_name
         
         return None
