@@ -1054,7 +1054,7 @@ class activity_RezipArticle(activity.activity):
         details = self.parent_details_from_soup(old_filename, soup, first_parent_level)
         if details:
             type = details['type']
-            if type == 'media' and 'mimetype' in details and details['mimetype'] == 'video'
+            if type == 'media' and 'mimetype' in details and details['mimetype'] == 'video':
                 ordinal = details['ordinal']
             elif 'sibling_ordinal' in details:
                 ordinal = details['sibling_ordinal']
