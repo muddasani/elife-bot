@@ -1256,7 +1256,13 @@ class activity_RezipArticle(activity.activity):
             if self.poa_ds_zip_file_name(file_name_map) is not None:
                 file_name = self.poa_ds_zip_file_name(file_name_map)
                 root = self.add_poa_ds_zip_to_xml(doi_id, file_name, root)
-            
+                
+            # Edge case for 04493, add all the video zip files too
+            if int(doi_id) == 4493:
+                for file_name in filter(lambda name: name.endswith('.zip'), file_name_map):
+                    if file_name != self.poa_ds_zip_file_name(file_name_map):
+                        root = self.add_poa_ds_zip_to_xml(doi_id, file_name, root)
+                    
 
         # Start the file output
         reparsed_string = xmlio.output(root)
