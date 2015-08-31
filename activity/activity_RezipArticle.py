@@ -417,7 +417,8 @@ class activity_RezipArticle(activity.activity):
                                  + zip_file_name_plus_path)
             
             # Add to zip
-            new_zipfile = zipfile.ZipFile(zip_file_name_plus_path, 'w', zipfile.ZIP_DEFLATED)
+            new_zipfile = zipfile.ZipFile(zip_file_name_plus_path, 'w',
+                                          zipfile.ZIP_DEFLATED, allowZip64 = True)
             new_zipfile.write(file_name_plus_path, file_name)
             new_zipfile.close()
             
@@ -681,7 +682,8 @@ class activity_RezipArticle(activity.activity):
                 # Zip EPS files
                 filename = self.file_name_from_name(file)
                 zip_file_name = self.EPS_DIR + os.sep + filename + '.zip'
-                new_zipfile = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+                new_zipfile = zipfile.ZipFile(zip_file_name,
+                                              'w', zipfile.ZIP_DEFLATED, allowZip64 = True)
                 new_zipfile.write(file, filename)
                 new_zipfile.close()
 
@@ -700,7 +702,8 @@ class activity_RezipArticle(activity.activity):
                 # Zip TIF files
                 filename = self.file_name_from_name(file)
                 zip_file_name = self.TIF_DIR + os.sep + filename + '.zip'
-                new_zipfile = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+                new_zipfile = zipfile.ZipFile(zip_file_name,
+                                              'w', zipfile.ZIP_DEFLATED, allowZip64 = True)
                 new_zipfile.write(file, filename)
                 new_zipfile.close()
         
@@ -852,7 +855,8 @@ class activity_RezipArticle(activity.activity):
             
             folder_name_only = folder_name.split(os.sep)[-1]
             zip_file_name = folder_name_only + '.zip'
-            new_zipfile = zipfile.ZipFile(self.TMP_DIR + os.sep + zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+            new_zipfile = zipfile.ZipFile(self.TMP_DIR + os.sep + zip_file_name,
+                                          'w', zipfile.ZIP_DEFLATED, allowZip64 = True)
             
             # Read all files in all subfolders and add them to the new zip file
             for root, dirs, files in os.walk(folder_name):
@@ -1552,7 +1556,8 @@ class activity_RezipArticle(activity.activity):
     
     def create_new_zip(self, zip_file_name):
     
-        new_zipfile = zipfile.ZipFile(self.ZIP_DIR + os.sep + zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+        new_zipfile = zipfile.ZipFile(self.ZIP_DIR + os.sep + zip_file_name,
+                                      'w', zipfile.ZIP_DEFLATED, allowZip64 = True)
             
         dirfiles = self.file_list(self.OUTPUT_DIR)
         
