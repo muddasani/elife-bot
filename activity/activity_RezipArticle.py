@@ -1524,7 +1524,7 @@ class activity_RezipArticle(activity.activity):
         """
 
         # Create the XML tag
-        supp_tag = self.ds_zip_xml_element(file_name)
+        supp_tag = self.ds_zip_xml_element(file_name, doi_id)
 
         # Add the tag to the XML
         for tag in root.findall('./front/article-meta'):
@@ -1537,16 +1537,26 @@ class activity_RezipArticle(activity.activity):
             
         return root
     
-    def ds_zip_xml_element(self, file_name):
+    def ds_zip_xml_element(self, file_name, doi_id):
         
         supp_tag = Element("supplementary-material")
         ext_link_tag = SubElement(supp_tag, "ext-link")
         ext_link_tag.set("xlink:href", file_name)
         if 'supp' in file_name:
             # Only add link text and paragraph for supp.zip files, and not for 04493 video files
-            ext_link_tag.text = "Download zip"
+            if int(doi_id) == 4493:
+                ext_link_tag.text = "Download zip of figure supplements and supplementary file"
+            else:
+                ext_link_tag.text = "Download zip"
+            
             p_tag = SubElement(supp_tag, "p")
             p_tag.text = "Any figures and tables for this article are included in the PDF. The zip folder contains additional supplemental files."
+
+        elif int(doi_id) == 4493:
+            # Video files for 04493 PoA, add this link text
+            video_file_name = file_name.split('.')[0].replace('_', ' ')
+            ext_link_tag.text = "Download zip of " + str(video_file_name)
+            
         return supp_tag
 
     
