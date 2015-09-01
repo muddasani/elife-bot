@@ -1258,7 +1258,7 @@ class activity_RezipArticle(activity.activity):
             # Edge case for 04493, add all the video zip files too
             if int(doi_id) == 4493:
                 for old_name,new_name in file_name_map.iteritems():
-                    if ((self.file_extension(new_name) == 'zip'
+                    if (self.file_extension(new_name) == 'zip'
                          and new_name != self.poa_ds_zip_file_name(file_name_map)):
                         root = self.add_poa_ds_zip_to_xml(doi_id, new_name, root)
 
