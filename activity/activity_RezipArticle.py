@@ -1243,7 +1243,10 @@ class activity_RezipArticle(activity.activity):
         
         # Remove related-article tag id attributes
         root = self.related_article_convert_in_xml(root)
-    
+
+        # Remove university from institution tags
+        root = self.institution_university_convert_in_xml(root)
+
         # For PoA, 
         soup = self.article_soup(self.article_xml_file())
         if parser.is_poa(soup) and parser.pub_date(soup) is None:
@@ -1284,6 +1287,16 @@ class activity_RezipArticle(activity.activity):
                 del tag.attrib['id']
         return root
     
+    def institution_university_convert_in_xml(self, root):
+        """
+        <institution content-type="university"> remove @content-type="university"
+        Usually found in <award-group> <funding-source>
+        """
+        for tag in root.findall('.//institution'):
+            if tag.get('content-type') and tag.get('content-type') == "university":
+                del tag.attrib['content-type']
+        return root
+
     def subject_group_convert_in_xml(self, root):
         """
         Convert capitalisation of <subject> tags in article categories
