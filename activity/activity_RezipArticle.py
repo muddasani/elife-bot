@@ -1250,6 +1250,9 @@ class activity_RezipArticle(activity.activity):
         # Fix sub-article titles
         root = self.sub_article_title_convert_in_xml(root)
         
+        # Fix reference lpage values that are less than their fpage values
+        root = self.ref_fpage_lpage_convert_in_xml(root)
+        
         # For PoA, 
         soup = self.article_soup(self.article_xml_file())
         if parser.is_poa(soup) and parser.pub_date(soup) is None:
@@ -1319,6 +1322,65 @@ class activity_RezipArticle(activity.activity):
             for subject_tag in tag.findall('./subject'):
                 subject_tag.text = self.title_case(subject_tag.text)
         return root
+    
+    def ref_fpage_lpage_convert_in_xml(self, root):
+        """
+        For ref that have an lpage that is less than its fpage,
+        change the lpage value
+        """
+        for tag in root.findall('.//ref'):
+            fpage = None
+            lpage = None
+            for fpage_tag in tag.findall('.//fpage'):
+                fpage = fpage_tag.text
+                break
+                
+            for lpage_tag in tag.findall('.//lpage'):
+                lpage = lpage_tag.text
+                break
+                
+            if fpage and lpage:
+                (fpage, lpage) = self.change_fpage_lpage(fpage, lpage)
+                fpage_tag.text = str(fpage)
+                lpage_tag.text = str(lpage)
+        return root
+                
+    def change_fpage_lpage(self, fpage, lpage):
+        """
+        Check if lpage is less than fpage, and if so fix it
+        The fpage value may not be completely numeric
+        If not, return the originals
+        """
+        # Can only handle when the lpage is numeric for now
+        if not lpage.isdigit():
+            return (fpage, lpage)
+            
+        #print "old fpage: " + fpage + ", old lpage: " + lpage
+        
+        # Get the numeric end of the fpage value by reading it in reverse
+        fpage_num_end = ''
+        for ch in fpage[::-1]:
+            if ch.isdigit():
+                fpage_num_end = ch + fpage_num_end
+            else:
+                break
+        
+        convert = False
+        if fpage_num_end != '':
+            # Now we can compare the numeric portions
+            if int(lpage) < int(fpage_num_end):
+                convert = True
+        
+        if convert:
+            # Now change the lpage value by borrowing characters
+            #  from the start of the fpage value
+            lpage_len = len(lpage)
+            lpage = fpage[0:-lpage_len] + lpage
+            
+        #print "new fpage: " + fpage + ", new lpage: " + lpage
+        
+        return (fpage, lpage)
+        
     
     def research_organism_kwd_convert_in_xml(self, root, doi_id):
         """
