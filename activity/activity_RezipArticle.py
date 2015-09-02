@@ -1247,6 +1247,9 @@ class activity_RezipArticle(activity.activity):
         # Remove university from institution tags
         root = self.institution_university_convert_in_xml(root)
 
+        # Fix sub-article titles
+        root = self.sub_article_title_convert_in_xml(root)
+        
         # For PoA, 
         soup = self.article_soup(self.article_xml_file())
         if parser.is_poa(soup) and parser.pub_date(soup) is None:
@@ -1295,6 +1298,17 @@ class activity_RezipArticle(activity.activity):
         for tag in root.findall('.//institution'):
             if tag.get('content-type') and tag.get('content-type') == "university":
                 del tag.attrib['content-type']
+        return root
+
+    def sub_article_title_convert_in_xml(self, root):
+        """
+        Standardise the sub-article titles
+        """
+        for tag in root.findall('./sub-article/front-stub/title-group/article-title'):
+            if tag.text and tag.text.lower().startswith('decision'):
+                tag.text = "Decision letter"
+            elif tag.text and tag.text.lower().startswith('author'):
+                tag.text = "Author response"
         return root
 
     def subject_group_convert_in_xml(self, root):
