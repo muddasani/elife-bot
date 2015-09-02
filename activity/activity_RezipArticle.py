@@ -1240,6 +1240,9 @@ class activity_RezipArticle(activity.activity):
         
         # Wrap citation collab tags in person-group if they are not already
         root = self.element_citation_collab_wrap_in_xml(root)
+        
+        # Remove related-article tag id attributes
+        root = self.related_article_convert_in_xml(root)
     
         # For PoA, 
         soup = self.article_soup(self.article_xml_file())
@@ -1272,6 +1275,15 @@ class activity_RezipArticle(activity.activity):
     def dtd_version_to_xml(self, root):
         root.set('dtd-version', '1.1d3')
 
+    def related_article_convert_in_xml(self, root):
+        """
+        Remove id attribute from related-article tags
+        """
+        for tag in root.findall('.//related-article'):
+            if tag.get('id'):
+                del tag.attrib['id']
+        return root
+    
     def subject_group_convert_in_xml(self, root):
         """
         Convert capitalisation of <subject> tags in article categories
