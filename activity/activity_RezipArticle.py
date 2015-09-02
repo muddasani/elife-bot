@@ -1341,8 +1341,8 @@ class activity_RezipArticle(activity.activity):
                 
             if fpage and lpage:
                 (fpage, lpage) = self.change_fpage_lpage(fpage, lpage)
-                fpage_tag.text = str(fpage)
-                lpage_tag.text = str(lpage)
+                fpage_tag.text = fpage
+                lpage_tag.text = lpage
         return root
                 
     def change_fpage_lpage(self, fpage, lpage):
