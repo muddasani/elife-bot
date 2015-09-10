@@ -1393,14 +1393,27 @@ class activity_RezipArticle(activity.activity):
         convert = False
         if fpage_num_end != '':
             # Now we can compare the numeric portions
-            if int(lpage) < int(fpage_num_end):
+            if int(lpage) < int(fpage_num_end) and len(fpage) == len(fpage_num_end):
+                # All numeric
                 convert = True
+                fpage_clip_index = len(lpage)
+            # If fpage is non-numeric, then we want to convert regardless
+            #  so we get the non-numeric portion as a prefix to the lpage value
+            #  e.g.  S10-27 turns into S10-S27
+            elif len(fpage) > len(fpage_num_end):
+                convert = True
+                if int(lpage) < int(fpage_num_end):
+                    # Replace only the last portion of the numeric characters
+                    fpage_clip_index = len(lpage)
+                else:
+                    # Replace all the numeric characters, keep non-numeric characters from first page
+                    fpage_clip_index = len(fpage_num_end)
+
         
         if convert:
             # Now change the lpage value by borrowing characters
             #  from the start of the fpage value
-            lpage_len = len(lpage)
-            lpage = fpage[0:-lpage_len] + lpage
+            lpage = fpage[0:-fpage_clip_index] + lpage
             
         #print "new fpage: " + fpage + ", new lpage: " + lpage
         
