@@ -483,6 +483,14 @@ class activity_RezipArticle(activity.activity):
         # Remove the prefix itself, is also a key it seems
         if prefix in s3_key_names:
             s3_key_names.remove(prefix)
+        
+        """
+        # During development, turn this on to download the xml only so it is quicker
+        for name in s3_key_names:
+            if "xml" in name:
+                xml_s3_key_names = [name]
+        s3_key_names = xml_s3_key_names
+        """
    
         self.download_s3_key_names_to_subfolder(bucket, s3_key_names, subfolder_name)
         
@@ -1255,9 +1263,11 @@ class activity_RezipArticle(activity.activity):
         
         # For PoA, 
         soup = self.article_soup(self.article_xml_file())
-        if parser.is_poa(soup) and parser.pub_date(soup) is None:
-            # add the published date to the XML
-            root = self.add_pub_date_to_xml(doi_id, root)
+        if parser.is_poa(soup):
+            if parser.pub_date(soup) is None:
+                # add the published date to the XML
+                root = self.add_pub_date_to_xml(doi_id, root)
+            
             # add the volume number
             root = self.add_volume_to_xml(self.poa_volume(doi_id), root)
             # set the article-id, to overwrite the v2, v3 value if present
@@ -1273,6 +1283,12 @@ class activity_RezipArticle(activity.activity):
                     if (self.file_extension(new_name) == 'zip'
                          and new_name != self.poa_ds_zip_file_name(file_name_map)):
                         root = self.add_poa_ds_zip_to_xml(doi_id, new_name, root)
+        # VoR files
+        if not parser.is_poa(soup):
+            # Edge case for 00731
+            if int(doi_id) == 731:
+                root = self.change_author_notes_xml_00731(root)
+                
 
         # Start the file output
         reparsed_string = xmlio.output(root)
@@ -1283,6 +1299,15 @@ class activity_RezipArticle(activity.activity):
     
     def dtd_version_to_xml(self, root):
         root.set('dtd-version', '1.1d3')
+
+    def change_author_notes_xml_00731(self, root):
+        """
+        Single article edit
+        """
+        for p_tag in root.findall('.//author-notes/fn[@id="fn1"]/p'):
+            p_tag.text = "Sophien Kamoun, Johannes Krause, Marco Thines, and Detlef Weigel are listed in alphabetical order"
+
+        return root
 
     def related_article_convert_in_xml(self, root):
         """
