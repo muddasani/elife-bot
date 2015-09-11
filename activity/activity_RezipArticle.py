@@ -30,6 +30,8 @@ from wand.image import Image
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 
+import csv
+
 """
 RezipArticle activity
 """
@@ -84,6 +86,9 @@ class activity_RezipArticle(activity.activity):
             self.simpledb_domain_name = "POAFile_dev"
         elif self.article_bucket == "elife-articles":
             self.simpledb_domain_name = "POAFile"
+        
+        # Article dates data
+        self.article_dates_csv = 'article-dates.csv'
         
         # journal
         self.journal = 'elife'
@@ -261,6 +266,55 @@ class activity_RezipArticle(activity.activity):
                 return True
 
     def get_poa_date_str_for_version(self, doi_id, version):
+        """ """
+        return self.get_date_str_for_version_from_csv('poa', doi_id, version)
+
+    def get_vor_date_str_for_version(self, doi_id, version):
+        """ """
+        return self.get_date_str_for_version_from_csv('vor', doi_id, 1)
+    
+    def get_date_str_for_version_from_csv(self, status, doi_id, version):
+        """
+        Read the csv file for updated dates, and format as a date string value we want
+        """
+        date_str = None
+        
+        doi_col = 0
+        date_col = 1
+        status_col = 2
+        version_col = 3
+        
+        doi = '10.7554/eLife.' + str(doi_id).zfill(5)
+        
+        csvreader = csv.reader(open(self.article_dates_csv, 'rb'), delimiter=',', quotechar='"')
+        matched_rows = []
+        for row in csvreader:
+            try:
+                if row[doi_col] == doi and row[status_col].lower() == status.lower():
+                    matched_rows.append(row)
+            except IndexError:
+                if(self.logger):
+                    self.logger.info('csv date file read error on column index')
+
+        # Note: expect the csv to be sorted by date already
+        
+        row = None
+        try:
+            row = matched_rows[int(version)-1]
+        except IndexError:
+            if(self.logger):
+                self.logger.info('csv matched rows could not find ' + status
+                                 + ' version ' + str(int(version)-1) + ' of doi ' + str(doi))
+        
+        if row:
+            date_struct = time.strptime(row[date_col], '%Y-%m-%d %H:%M:%S')
+            date_str = time.strftime("%Y%m%d", date_struct)
+            # Add midnight minutes to the end
+            date_str += '000000'
+
+        return date_str
+
+    def get_poa_date_str_for_version_from_simpledb(self, doi_id, version):
         """
         Relying on the populated SimpleDB table for PoA data
         look whether a version exists
@@ -282,7 +336,7 @@ class activity_RezipArticle(activity.activity):
         # default
         return None
     
-    def get_vor_date_str_for_version(self, doi_id, version):
+    def get_vor_date_str_for_version_from_bucket(self, doi_id, version):
         """
         VoR file date string, for now just get the date updated
         on the xml.zip file in the S3 bucket
@@ -330,7 +384,7 @@ class activity_RezipArticle(activity.activity):
         sometimes PoA files are prepared more than once, use the latest
         """
         s3_key_names = []
-        date_str = self.get_poa_date_str_for_version(doi_id, version)
+        date_str = self.get_poa_date_str_for_version_from_simpledb(doi_id, version)
         if date_str:
             s3_key_names = self.get_poa_s3_key_names_from_db(doi_id, version, date_str)
         
@@ -1626,7 +1680,7 @@ class activity_RezipArticle(activity.activity):
         
         # Get the date for the first version
         date_str = self.get_poa_date_str_for_version(doi_id, version = 1)
-        date_struct = time.strptime(date_str,  "%Y%m%d")
+        date_struct = time.strptime(date_str,  "%Y%m%d000000")
         
         # Create the pub-date XML tag
         pub_date_tag = self.pub_date_xml_element(date_struct)
@@ -1652,7 +1706,7 @@ class activity_RezipArticle(activity.activity):
         """
         volume = None
         # Get the date for the first version
-        date_str = self.get_poa_date_str_for_version(doi_id, version = 1)
+        date_str = self.get_poa_date_str_for_version_from_simpledb(doi_id, version = 1)
         if date_str:
             date_struct = time.strptime(date_str,  "%Y%m%d")
             if date_struct:
