@@ -1289,6 +1289,9 @@ class activity_RezipArticle(activity.activity):
             if int(doi_id) == 731:
                 root = self.change_author_notes_xml_00731(root)
                 
+            if int(doi_id) in [291,334,367,380,792,961,994,1684,4395,5826]:
+                root = self.fix_dodgy_reference_doi_in_xml(doi_id, root)
+                
 
         # Start the file output
         reparsed_string = xmlio.output(root)
@@ -1308,6 +1311,73 @@ class activity_RezipArticle(activity.activity):
             p_tag.text = "Sophien Kamoun, Johannes Krause, Marco Thines, and Detlef Weigel are listed in alphabetical order"
 
         return root
+    
+    def fix_dodgy_reference_doi_in_xml(self, doi_id, root):
+        """
+        Replace reference doi values if matched from the list
+        """
+        
+        doi_replacements = {}
+        # 00291
+        doi_replacements['10.184/jem.20100682'] = '10.1084/jem.20100682'
+        # 00334
+        doi_replacements['01190410.1103/PhysRevE.71.011904'] = '10.1103/PhysRevE.71.011904'
+        doi_replacements['10.1021/ bi992105o'] = '10.1021/bi992105o'
+        doi_replacements['10.1021/ bi011137k'] = '10.1021/bi011137k'
+        doi_replacements['e14910.1371/journal.pbio.0060149'] = '10.1371/journal.pbio.0060149'
+        # 00367
+        doi_replacements['10.1146/ annurev.earth.33.031504.103001'] = '10.1146/annurev.earth.33.031504.103001'
+        # 00380
+        doi_replacements['10.1126/science. 1068094'] = '10.1126/science.1068094'
+        # 00792
+        doi_replacements['0162-0886/91/1302-0044$02.00'] = '10.1093/clinids/13.Supplement_4.S285'
+        # 00961
+        doi_replacements['11200322'] = '11200322'
+        # 00994
+        doi_replacements['10.1017.S1355838201011074'] = '10.1017/S1355838201011074'
+        # 01684
+        doi_replacements['10.1017.S1431927601010522'] = '10.1007/s10005-001-0020-4'
+        # 04395
+        doi_replacements['10.156/NEJMp1409859'] = '10.1056/NEJMp1409859'
+        # 05826
+        doi_replacements['10.137/journal.pone.0110416'] = '10.1371/journal.pone.0110416'
+        doi_replacements['10.137/journal.pbio.1001424'] = '10.1371/journal.pbio.1001424'
+        
+        for citation_tag in root.findall('.//ref-list/ref/element-citation'):
+            doi_tag = None
+            for doi_tag in citation_tag.findall('.//pub-id[@pub-id-type="doi"]'):
+                if doi_tag is not None and doi_tag.text is not None and doi_replacements.get(doi_tag.text):
+                    if(self.logger):
+                        self.logger.info('fixing dodgy reference DOI ' + doi_tag.text + ' in: ' + str(doi_id))
+                    doi_tag.text = str(doi_replacements.get(doi_tag.text))
+                
+            # More fixes for dodgy elements
+            if doi_tag is not None:
+                if ((  int(doi_id) == 334 and doi_tag.text == '10.1103/PhysRevE.71.011904')
+                    or (int(doi_id) == 334 and doi_tag.text == '10.1371/journal.pbio.0060149')):
+                    
+                    if(self.logger):
+                        self.logger.info('fixing dodgy page values in ' + doi_tag.text + ' in: ' + str(doi_id))
+                    self.remove_tag_from_tag_in_xml(citation_tag, 'fpage')
+                    self.remove_tag_from_tag_in_xml(citation_tag, 'lpage')
+                    
+                if (int(doi_id) == 961 and doi_tag.text == '11200322'):
+                    if(self.logger):
+                        self.logger.info('removing dodgy doi ' + doi_tag.text + ' in: ' + str(doi_id))
+                    self.remove_tag_from_tag_in_xml(citation_tag, 'pub-id')
+                    
+                if (int(doi_id) == 994 and doi_tag.text == '10.1017/S1355838201011074'):
+                    for source_tag in citation_tag.findall('.//source'):
+                        source_tag.text = 'RNA'
+                
+        return root
+
+    def remove_tag_from_tag_in_xml(self, parent_tag, tag_name):
+        """
+        Used in cleaning dodgy references
+        """
+        for tag in parent_tag.findall('.//' + tag_name):
+            parent_tag.remove(tag)
 
     def related_article_convert_in_xml(self, root):
         """
