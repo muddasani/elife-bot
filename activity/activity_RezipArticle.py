@@ -1415,6 +1415,14 @@ class activity_RezipArticle(activity.activity):
                     self.remove_tag_from_tag_in_xml(citation_tag, 'fpage')
                     self.remove_tag_from_tag_in_xml(citation_tag, 'lpage')
                     
+                    # Add elocation-id for each
+                    if doi_tag.text == '10.1103/PhysRevE.71.011904':
+                        elocation_id = SubElement(citation_tag, "elocation-id")
+                        elocation_id.text = '011904'
+                    if doi_tag.text == '10.1371/journal.pbio.0060149':
+                        elocation_id = SubElement(citation_tag, "elocation-id")
+                        elocation_id.text = 'e149'
+                    
                 if (int(doi_id) == 961 and doi_tag.text == '11200322'):
                     if(self.logger):
                         self.logger.info('removing dodgy doi ' + doi_tag.text + ' in: ' + str(doi_id))
