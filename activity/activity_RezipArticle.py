@@ -1312,6 +1312,9 @@ class activity_RezipArticle(activity.activity):
         # Fix sub-article titles
         root = self.sub_article_title_convert_in_xml(root)
         
+        # Fix elocation-id edge cases
+        root = self.ref_elocation_id_edge_cases_in_xml(doi_id, root)
+        
         # Fix reference lpage values that are less than their fpage values
         root = self.ref_fpage_lpage_convert_in_xml(root)
         
@@ -1478,6 +1481,30 @@ class activity_RezipArticle(activity.activity):
         for tag in root.findall('./front/article-meta/article-categories/subj-group'):
             for subject_tag in tag.findall('./subject'):
                 subject_tag.text = self.title_case(subject_tag.text)
+        return root
+    
+    def ref_elocation_id_edge_cases_in_xml(self, doi_id, root):
+        """
+        Some ref values needing correcting on an article by article basis
+        """
+        if int(doi_id) == 2362:
+            for ref_tag in root.findall('.//ref'):
+                if ref_tag.get('id') == 'bib73':
+                    for citation_tag in ref_tag.findall('.//element-citation'):
+                        elocation_id = SubElement(citation_tag, "elocation-id")
+                        elocation_id.text = 'e00036-11'
+                        self.remove_tag_from_tag_in_xml(citation_tag, 'fpage')
+                        self.remove_tag_from_tag_in_xml(citation_tag, 'lpage')
+
+        if int(doi_id) == 3883:
+            for ref_tag in root.findall('.//ref'):
+                if ref_tag.get('id') == 'bib5':
+                    for citation_tag in ref_tag.findall('.//element-citation'):
+                        elocation_id = SubElement(citation_tag, "elocation-id")
+                        elocation_id.text = 'e01730-14'
+                        self.remove_tag_from_tag_in_xml(citation_tag, 'fpage')
+                        self.remove_tag_from_tag_in_xml(citation_tag, 'lpage')
+                        
         return root
     
     def ref_fpage_lpage_convert_in_xml(self, root):
