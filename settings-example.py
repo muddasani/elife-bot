@@ -137,6 +137,125 @@ class exp():
     # Logging
     setLevel = "INFO"
 
+class test():
+    # AWS settings
+    aws_access_key_id = ''
+    aws_secret_access_key = ''
+
+    workflow_context_path = 'workflow-context/'
+
+    # SQS settings
+    sqs_region = 'eu-west-1'
+    S3_monitor_queue = 'bot-test-S3-monitor-queue'
+    event_monitor_queue = 'bot-test-event-monitor-queue'
+    workflow_starter_queue = 'bot-test-workflow-starter-queue'
+    workflow_starter_queue_pool_size = 5
+    workflow_starter_queue_message_count = 5
+
+    # S3 settings
+    publishing_buckets_prefix = 'bot-test-'
+    # shouldn't need this but uploads seem to fail without. Should correspond with the s3 region
+    # hostname list here http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
+
+    s3_hostname = 's3-eu-west-1.amazonaws.com'
+    production_bucket = 'elife-production-final'
+    eif_bucket = 'elife-publishing-eif'
+    expanded_bucket = 'elife-publishing-expanded'
+    ppp_cdn_bucket = 'elife-publishing-cdn'
+    archive_bucket = 'elife-publishing-archive'
+
+    reference_eif_bucket = 'elife-publishing-eif-reference'
+
+    # REST endpoint for drupal node builder
+    # drupal_naf_endpoint = 'http://localhost:5000/nodes'
+    # drupal_EIF_endpoint = 'http://52.2.70.162//api/article.json'
+    # drupal_approve_endpoint = 'http://52.2.70.162/api/publish/'
+    drupal_EIF_endpoint = 'http://localhost:1238/api/article.json'
+    drupal_approve_endpoint = 'http://localhost:1238/api/publish/'
+
+    # lax endpoint to retrieve information about published versions of articles
+    lax_article_versions = 'http://2015-09-03.lax.elifesciences.org/api/v1/article/10.7554/eLife.{article_id}/version/'
+
+    # end JR settings
+
+    # S3 settings
+    bucket = 'elife-articles'
+    prefix = ''
+    delimiter = '/'
+
+    # SWF queue settings
+    domain = "Publish.test"
+    default_task_list = "DefaultTaskList"
+
+    # SimpleDB settings
+    simpledb_region = "eu-west-1"
+    simpledb_domain_postfix = "_dev"
+
+    # Converter settings
+    converter_url = ""
+    converter_token = "abcd"
+
+    # SES settings
+    # email needs to be verified by AWS
+    ses_region = "eu-west-1"
+    ses_sender_email = "sender@example.com"
+    ses_admin_email = "admin@example.com"
+
+    # CDN bucket settings
+    cdn_bucket = 'elife-cdn-dev'
+    cdn_distribution_id = u'E1HPZ2QWOYE9NX'
+    cdn_domain_name = 'dhkzd83nokruv.cloudfront.net'
+
+    # Lens bucket settings
+    lens_bucket = 'elife-lens-dev'
+    lens_distribution_id = u'E30WWCB2DNEOKI'
+    lens_domain_name = 'd32g8kubfuccxs.cloudfront.net'
+
+    # Bot S3 settings
+    bot_bucket = 'elife-bot-dev'
+
+    # POA delivery bucket
+    poa_bucket = 'elife-ejp-poa-delivery-dev'
+
+    # POA packaging bucket
+    poa_packaging_bucket = 'elife-poa-packaging-dev'
+
+    # POA FTP settings
+    POA_FTP_URI = ""
+    POA_FTP_USERNAME = ""
+    POA_FTP_PASSWORD = ""
+    POA_FTP_CWD = ""
+
+    # POA email settings
+    ses_poa_sender_email = "sender@example.com"
+    ses_poa_recipient_email = "admin@example.com"
+
+    # EJP S3 settings
+    ejp_bucket = 'elife-ejp-ftp-dev'
+
+    # Templates S3 settings
+    templates_bucket = 'elife-bot-dev'
+
+    # Crossref
+    crossref_url = 'http://test.crossref.org/servlet/deposit'
+    crossref_login_id = ''
+    crossref_login_passwd = ''
+
+    # PubMed FTP settings
+    PUBMED_FTP_URI = ""
+    PUBMED_FTP_USERNAME = ""
+    PUBMED_FTP_PASSWORD = ""
+    PUBMED_FTP_CWD = ""
+
+    # HEFCE Archive FTP settings
+    HEFCE_FTP_URI = ""
+    HEFCE_FTP_USERNAME = ""
+    HEFCE_FTP_PASSWORD = ""
+    HEFCE_FTP_CWD = ""
+
+    # Logging
+    setLevel = "INFO"
+
 
 class dev():
 
