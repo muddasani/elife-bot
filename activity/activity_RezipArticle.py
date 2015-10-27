@@ -538,6 +538,13 @@ class activity_RezipArticle(activity.activity):
         if prefix in s3_key_names:
             s3_key_names.remove(prefix)
         
+        # Ignore edge case old XML file
+        for name in s3_key_names:
+            if "elife00776.xml" in name:
+                s3_key_names.remove(name)
+                if(self.logger):
+                    self.logger.info('ignoring VoR file elife00776.xml for doi ' + str(doi_id))
+        
         """
         # During development, turn this on to download the xml only so it is quicker
         for name in s3_key_names:
