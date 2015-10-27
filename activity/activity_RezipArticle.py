@@ -88,6 +88,7 @@ class activity_RezipArticle(activity.activity):
             self.simpledb_domain_name = "POAFile"
         
         # Article dates data
+        self.article_dates_csv_url = 'http://elifesciences.org/elife/article-dates.csv'
         self.article_dates_csv = 'article-dates.csv'
         
         # journal
@@ -105,6 +106,9 @@ class activity_RezipArticle(activity.activity):
         
         # Create output directories
         self.create_activity_directories()
+
+        # Download article dates CSV
+        self.download_article_dates_csv()
 
         # Download the S3 objects
         self.download_files_from_s3(elife_id)
@@ -193,6 +197,18 @@ class activity_RezipArticle(activity.activity):
                 file_log.write("\n" + filename.split(os.sep)[-1]
                                + "\t" + str(i.filename)
                                + "\t" + str(i.file_size))
+
+    def download_article_dates_csv(self):
+        
+        if(self.logger):
+            self.logger.info("Downloading article dates csv file from " + self.article_dates_csv_url) 
+        
+        r = requests.get(self.article_dates_csv_url)
+        
+        local_csv_file_name = self.get_tmp_dir() + os.sep + self.article_dates_csv
+        csv_file = open(local_csv_file_name, 'wb')
+        csv_file.write(r.content)
+        csv_file.close()
 
     def download_files_from_s3(self, doi_id):
         
@@ -286,7 +302,8 @@ class activity_RezipArticle(activity.activity):
         
         doi = '10.7554/eLife.' + str(doi_id).zfill(5)
         
-        csvreader = csv.reader(open(self.article_dates_csv, 'rb'), delimiter=',', quotechar='"')
+        csv_file_path = self.get_tmp_dir() + os.sep + self.article_dates_csv
+        csvreader = csv.reader(open(csv_file_path, 'rb'), delimiter=',', quotechar='"')
         matched_rows = []
         for row in csvreader:
             try:
