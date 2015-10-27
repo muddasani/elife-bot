@@ -1370,6 +1370,10 @@ class activity_RezipArticle(activity.activity):
             if int(doi_id) == 731:
                 root = self.change_author_notes_xml_00731(root)
                 
+            # Author keywords edge case for 00051
+            if int(doi_id) == 51:
+                root = self.change_kwd_group_xml_00051(root)
+
             if int(doi_id) in [291,334,367,380,792,961,994,1684,4395,5826]:
                 root = self.fix_dodgy_reference_doi_in_xml(doi_id, root)
                 
@@ -1390,6 +1394,17 @@ class activity_RezipArticle(activity.activity):
         """
         for p_tag in root.findall('.//author-notes/fn[@id="fn1"]/p'):
             p_tag.text = "Sophien Kamoun, Johannes Krause, Marco Thines, and Detlef Weigel are listed in alphabetical order"
+
+        return root
+    
+    def change_kwd_group_xml_00051(self, root):
+        """
+        Single article edit
+        """
+        for kwd_group_tag in root.findall('.//kwd-group'):
+            if kwd_group_tag.get('kwd-group-type') is None:
+                # No group type, this one should be author keywords
+                kwd_group_tag.set('kwd-group-type', 'author-keywords')
 
         return root
     
