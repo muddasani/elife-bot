@@ -1367,6 +1367,11 @@ class activity_RezipArticle(activity.activity):
                     if (self.file_extension(new_name) == 'zip'
                          and new_name != self.poa_ds_zip_file_name(file_name_map)):
                         root = self.add_poa_ds_zip_to_xml(doi_id, new_name, root)
+                        
+            # Edge case for missing editor affiliation on 03125
+            if int(doi_id) == 3125:
+                root = self.change_editor_aff_xml_03125(root)
+            
         # VoR files
         if not parser.is_poa(soup):
             # Edge case for 00731
@@ -1408,6 +1413,20 @@ class activity_RezipArticle(activity.activity):
             if kwd_group_tag.get('kwd-group-type') is None:
                 # No group type, this one should be author keywords
                 kwd_group_tag.set('kwd-group-type', 'author-keywords')
+
+        return root
+    
+    def change_editor_aff_xml_03125(self, root):
+        """
+        Single article edit
+        """
+        for aff_tag in root.findall('.//contrib[@contrib-type="editor"]/aff'):
+            for institution_tag in aff_tag.findall('.//institution'):
+                if institution_tag.text == '':
+                    institution_tag.text = 'Max Planck Institute for Marine Microbiology'
+            for country_tag in aff_tag.findall('.//country'):
+                if country_tag.text == '':
+                    country_tag.text = 'Germany' 
 
         return root
     
