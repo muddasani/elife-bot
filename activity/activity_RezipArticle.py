@@ -1339,6 +1339,9 @@ class activity_RezipArticle(activity.activity):
         # Fix elocation-id edge cases
         root = self.ref_elocation_id_edge_cases_in_xml(doi_id, root)
         
+        # Fix ref person-group and name edge cases
+        root = self.ref_name_edge_cases_in_xml(doi_id, root)
+        
         # Fix reference lpage values that are less than their fpage values
         root = self.ref_fpage_lpage_convert_in_xml(root)
         
@@ -1548,6 +1551,20 @@ class activity_RezipArticle(activity.activity):
                         self.remove_tag_from_tag_in_xml(citation_tag, 'fpage')
                         self.remove_tag_from_tag_in_xml(citation_tag, 'lpage')
                         
+        return root
+    
+    
+    def ref_name_edge_cases_in_xml(self, doi_id, root):
+        """
+        Some ref values needing changes to person-group or name or surname
+        """
+        if int(doi_id) == 4872:
+            for ref_tag in root.findall('.//ref'):
+                if ref_tag.get('id') == 'bib1':
+                    for surname_tag in ref_tag.findall('.//element-citation/person-group/name/surname'):
+                        if surname_tag.text == '\Shewchuk':
+                            surname_tag.text = 'Shewchuk'
+
         return root
     
     def ref_fpage_lpage_convert_in_xml(self, root):
