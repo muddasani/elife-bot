@@ -1439,7 +1439,7 @@ class activity_RezipArticle(activity.activity):
         """
         for subject_group_tag in root.findall('./front/article-meta/article-categories/subj-group[@subj-group-type="display-channel"]'):
             for subject_tag in tag.findall('./subject'):
-                subject_tag.text = 'Short Report"
+                subject_tag.text = 'Short Report'
 
         return root
     
