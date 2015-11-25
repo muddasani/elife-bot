@@ -1422,10 +1422,10 @@ class activity_RezipArticle(activity.activity):
         """
         for aff_tag in root.findall('.//contrib[@contrib-type="editor"]/aff'):
             for institution_tag in aff_tag.findall('.//institution'):
-                if institution_tag.text == '':
+                if institution_tag.text.strip() == '':
                     institution_tag.text = 'Max Planck Institute for Marine Microbiology'
             for country_tag in aff_tag.findall('.//country'):
-                if country_tag.text == '':
+                if country_tag.text.strip() == '':
                     country_tag.text = 'Germany' 
 
         return root
