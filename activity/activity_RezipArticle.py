@@ -1374,7 +1374,7 @@ class activity_RezipArticle(activity.activity):
             if int(doi_id) == 51:
                 root = self.change_kwd_group_xml_00051(root)
 
-            if int(doi_id) in [291,334,367,380,792,961,994,1684,4395,5826]:
+            if int(doi_id) in [291,334,367,380,792,961,994,1684,4395,4493,5826,8811]:
                 root = self.fix_dodgy_reference_doi_in_xml(doi_id, root)
                 
 
@@ -1435,9 +1435,13 @@ class activity_RezipArticle(activity.activity):
         doi_replacements['10.1017.S1431927601010522'] = '10.1007/s10005-001-0020-4'
         # 04395
         doi_replacements['10.156/NEJMp1409859'] = '10.1056/NEJMp1409859'
+        # 04493
+        doi_replacements['10.1371/journal.pbio. 1001425'] = '10.1371/journal.pbio.1001425'
         # 05826
         doi_replacements['10.137/journal.pone.0110416'] = '10.1371/journal.pone.0110416'
         doi_replacements['10.137/journal.pbio.1001424'] = '10.1371/journal.pbio.1001424'
+        # 08811
+        doi_replacements['E01-10-0089'] = '10.1091/mbc.E01-10-0089'
         
         for citation_tag in root.findall('.//ref-list/ref/element-citation'):
             doi_tag = None
