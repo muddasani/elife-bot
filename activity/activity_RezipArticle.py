@@ -1438,7 +1438,7 @@ class activity_RezipArticle(activity.activity):
         Set the display channel as Short Report
         """
         for subject_group_tag in root.findall('./front/article-meta/article-categories/subj-group[@subj-group-type="display-channel"]'):
-            for subject_tag in tag.findall('./subject'):
+            for subject_tag in subject_group_tag.findall('./subject'):
                 subject_tag.text = 'Short Report'
 
         return root
