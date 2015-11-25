@@ -1371,6 +1371,9 @@ class activity_RezipArticle(activity.activity):
             # Edge case for missing editor affiliation on 03125
             if int(doi_id) == 3125:
                 root = self.change_editor_aff_xml_03125(root)
+                
+            if int(doi_id) in [2112]:
+                root = self.display_channel_short_report_in_xml(root)
             
         # VoR files
         if not parser.is_poa(soup):
@@ -1429,6 +1432,17 @@ class activity_RezipArticle(activity.activity):
                     country_tag.text = 'Germany' 
 
         return root
+    
+    def display_channel_short_report_in_xml(self, root):
+        """
+        Set the display channel as Short Report
+        """
+        for subject_group_tag in root.findall('./front/article-meta/article-categories/subj-group[@subj-group-type="display-channel"]'):
+            for subject_tag in tag.findall('./subject'):
+                subject_tag.text = 'Short Report"
+
+        return root
+    
     
     def fix_dodgy_reference_doi_in_xml(self, doi_id, root):
         """
