@@ -1565,6 +1565,13 @@ class activity_RezipArticle(activity.activity):
                         if surname_tag.text == '\Shewchuk':
                             surname_tag.text = 'Shewchuk'
 
+        if int(doi_id) == 2935:
+            for ref_tag in root.findall('.//ref'):
+                if ref_tag.get('id') == 'bib7':
+                    for pg_tag in ref_tag.findall('.//element-citation/person-group'):
+                        if not pg_tag.get('person-group-type'):
+                            pg_tag.set('person-group-type', "editor")
+
         return root
     
     def ref_fpage_lpage_convert_in_xml(self, root):
