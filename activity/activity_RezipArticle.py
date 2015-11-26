@@ -68,8 +68,8 @@ class activity_RezipArticle(activity.activity):
         # Bucket settings
         self.output_bucket = "elife-articles-renamed"
         # Temporarily upload to a folder during development
-        self.output_bucket_folder = "samples05/"
-        self.output_article_xml_bucket_folder = "samples05/article-xml/"
+        self.output_bucket_folder = "samples06/"
+        self.output_article_xml_bucket_folder = "samples06/article-xml/"
         
         # EPS file bucket
         self.eps_output_bucket = "elife-eps-renamed"
