@@ -1131,8 +1131,9 @@ class activity_RezipArticle(activity.activity):
             
         # Here we want to set the parentage differently for videos
         #  because those items are their own parents, in a way
-        (first_parent_level, second_parent_level, third_parent_level) = \
-            self.parent_levels_by_type(item)
+        if item:
+            (first_parent_level, second_parent_level, third_parent_level) = \
+                self.parent_levels_by_type(item)
         
         asset = self.asset_from_soup(old_filename, soup, first_parent_level)
         
