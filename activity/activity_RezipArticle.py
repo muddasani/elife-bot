@@ -1131,6 +1131,9 @@ class activity_RezipArticle(activity.activity):
             
         # Here we want to set the parentage differently for videos
         #  because those items are their own parents, in a way
+        first_parent_level = None
+        second_parent_level = None
+        third_parent_level = None
         if item:
             (first_parent_level, second_parent_level, third_parent_level) = \
                 self.parent_levels_by_type(item)
