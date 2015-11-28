@@ -1261,7 +1261,8 @@ class activity_RezipArticle(activity.activity):
         file_name_map = {}
         
         # Ignore these files we do not want them anymore
-        ignore_files = ['elife05087s001.docx', 'elife05087s002.docx', 'elife08501f005.tif']
+        ignore_files = ['elife05087s001.docx', 'elife05087s002.docx', 'elife08501f005.tif',
+                        'elife09248fs002.tif']
                     
         # Get a list of all files
         dirfiles = self.file_list(self.TMP_DIR)
