@@ -1820,6 +1820,11 @@ class activity_RezipArticle(activity.activity):
         
         # Get the date for the first version
         date_str = self.get_poa_date_str_for_version(doi_id, version = 1)
+        if date_str is None:
+            if(self.logger):
+                self.logger.info('no pub-date found and no pub-date added: ' + str(doi_id))
+            return root
+            
         date_struct = time.strptime(date_str,  "%Y%m%d000000")
         
         # Create the pub-date XML tag
