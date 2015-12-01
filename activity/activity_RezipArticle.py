@@ -1391,6 +1391,10 @@ class activity_RezipArticle(activity.activity):
 
         # Start the file output
         reparsed_string = xmlio.output(root)
+
+        # Remove extra whitespace here for PoA articles to clean up
+        if parser.is_poa(soup):
+            reparsed_string = reparsed_string.replace("\n",'').replace("\t",'')
         
         f = open(xml_file, 'wb')
         f.write(reparsed_string)
