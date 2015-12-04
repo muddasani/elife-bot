@@ -424,7 +424,7 @@ class activity_RezipArticle(activity.activity):
                 if ((int(doi_id) == 3145 and version == 1) or
                    (int(doi_id) == 5042 and version == 1) or
                    (int(doi_id) == 6845 and version == 2) or
-                   (int(doi_id) == 7116 and version == 2)    ):
+                   (int(doi_id) == 7116)    ):
                     continue
                 
                 self.download_poa_files_from_s3_for_version(doi_id, version)
