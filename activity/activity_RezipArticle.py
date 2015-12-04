@@ -419,6 +419,14 @@ class activity_RezipArticle(activity.activity):
         for version in versions:
             if self.check_poa_has_version(doi_id, version) is True:
                 # We have a version
+                
+                # Here skip some PoA files we do not want in the archive
+                if ((int(doi_id) == 3145 and version == 1) or
+                   (int(doi_id) == 5042 and version == 1) or
+                   (int(doi_id) == 6845 and version == 2) or
+                   (int(doi_id) == 7116 and version == 2)    ):
+                    continue
+                
                 self.download_poa_files_from_s3_for_version(doi_id, version)
 
     
@@ -430,6 +438,14 @@ class activity_RezipArticle(activity.activity):
         bucket = s3_conn.lookup(self.settings.poa_packaging_bucket)
         
         s3_key_names = self.get_poa_s3_key_names(doi_id, version)
+        
+        # Remove some files we want to skip
+        e03851_key_names_to_remove = ['published/20141022/elife_poa_e03851_ds.zip',
+                                      'published/20141022/elife_poa_e03851_ds1.zip']
+        if int(doi_id) == 3851:
+            for key_name in e03851_key_names_to_remove:
+                s3_key_names.remove(key_name)
+        
 
         if(self.logger):
             self.logger.info('poa subfolder_name name: ' + subfolder_name)
