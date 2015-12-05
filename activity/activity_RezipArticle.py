@@ -104,6 +104,12 @@ class activity_RezipArticle(activity.activity):
         # Data passed to this activity
         elife_id = data["data"]["elife_id"]
         
+        # Skip articles right away
+        if int(elife_id) == 2516:
+            if(self.logger):
+                self.logger.info('skipping RezipArticle for: ' + str(elife_id))
+            return True
+        
         # Create output directories
         self.create_activity_directories()
 
@@ -419,17 +425,43 @@ class activity_RezipArticle(activity.activity):
         for version in versions:
             if self.check_poa_has_version(doi_id, version) is True:
                 # We have a version
-                self.download_poa_files_from_s3_for_version(doi_id, version)
+                
+                # Here skip some PoA files we do not want in the archive
+                if ((int(doi_id) == 3145) or
+                   (int(doi_id) == 5042) or
+                   (int(doi_id) == 3671 and version == 1) or
+                   (int(doi_id) == 6845 and version == 2) or
+                   (int(doi_id) == 2478 and version == 2) or
+                   (int(doi_id) == 7116)    ):
+                    continue
+                
+                if (int(doi_id) == 3671 and version == 2):
+                    # Download version 2 in place of version 1
+                    self.download_poa_files_from_s3_for_version(doi_id, version, as_version = 1)
+                else:
+                    # Default
+                    self.download_poa_files_from_s3_for_version(doi_id, version)
 
     
-    def download_poa_files_from_s3_for_version(self, doi_id, version):
-        subfolder_name = str(doi_id).zfill(5) + '_v' + str(version)
+    def download_poa_files_from_s3_for_version(self, doi_id, version, as_version = None):
+        if as_version is None:
+            as_version = version
+        
+        subfolder_name = str(doi_id).zfill(5) + '_v' + str(as_version)
         
         # Connect to S3 and bucket
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(self.settings.poa_packaging_bucket)
         
         s3_key_names = self.get_poa_s3_key_names(doi_id, version)
+        
+        # Remove some files we want to skip
+        e03851_key_names_to_remove = ['published/20141022/elife_poa_e03851_ds.zip',
+                                      'published/20141022/elife_poa_e03851_ds1.zip']
+        if int(doi_id) == 3851:
+            for key_name in e03851_key_names_to_remove:
+                s3_key_names.remove(key_name)
+        
 
         if(self.logger):
             self.logger.info('poa subfolder_name name: ' + subfolder_name)
@@ -1392,10 +1424,16 @@ class activity_RezipArticle(activity.activity):
 
             if int(doi_id) in [291,334,367,380,792,961,994,1684,4395,4493,5826,8811]:
                 root = self.fix_dodgy_reference_doi_in_xml(doi_id, root)
-                
+
+            # Fix contrib xref tags on two articles
+            if int(doi_id) in [1328,1816]:
+                root = self.fix_contrib_xref_conflict_in_xml(root)
 
         # Start the file output
         reparsed_string = xmlio.output(root)
+
+        # Remove extra whitespace here for PoA articles to clean up and one VoR file too
+        reparsed_string = reparsed_string.replace("\n",'').replace("\t",'')
         
         f = open(xml_file, 'wb')
         f.write(reparsed_string)
@@ -1435,6 +1473,15 @@ class activity_RezipArticle(activity.activity):
             for country_tag in aff_tag.findall('.//country'):
                 if country_tag.text.strip() == '':
                     country_tag.text = 'Germany' 
+
+        return root
+    
+    def fix_contrib_xref_conflict_in_xml(self, root):
+        """
+        
+        """
+        for xref_tag in root.findall('.//contrib/xref[@ref-type="conflict"]'):
+            xref_tag.set('ref-type', 'fn')
 
         return root
     
