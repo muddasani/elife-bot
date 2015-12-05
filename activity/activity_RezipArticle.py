@@ -427,17 +427,27 @@ class activity_RezipArticle(activity.activity):
                 # We have a version
                 
                 # Here skip some PoA files we do not want in the archive
-                if ((int(doi_id) == 3145 and version == 1) or
-                   (int(doi_id) == 5042 and version == 1) or
+                if ((int(doi_id) == 3145) or
+                   (int(doi_id) == 5042) or
+                   (int(doi_id) == 3671 and version == 1) or
                    (int(doi_id) == 6845 and version == 2) or
+                   (int(doi_id) == 2478 and version == 2) or
                    (int(doi_id) == 7116)    ):
                     continue
                 
-                self.download_poa_files_from_s3_for_version(doi_id, version)
+                if (int(doi_id) == 3671 and version == 2):
+                    # Download version 2 in place of version 1
+                    self.download_poa_files_from_s3_for_version(doi_id, version, as_version = 1)
+                else:
+                    # Default
+                    self.download_poa_files_from_s3_for_version(doi_id, version)
 
     
-    def download_poa_files_from_s3_for_version(self, doi_id, version):
-        subfolder_name = str(doi_id).zfill(5) + '_v' + str(version)
+    def download_poa_files_from_s3_for_version(self, doi_id, version, as_version = None):
+        if as_version is None:
+            as_version = version
+        
+        subfolder_name = str(doi_id).zfill(5) + '_v' + str(as_version)
         
         # Connect to S3 and bucket
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
