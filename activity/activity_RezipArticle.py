@@ -1422,7 +1422,7 @@ class activity_RezipArticle(activity.activity):
 
             # Fix contrib xref tags on two articles
             if int(doi_id) in [1328,1816]:
-                root = self.fix_contrib_xref_conflict_in_xml(doi_id, root)
+                root = self.fix_contrib_xref_conflict_in_xml(root)
 
         # Start the file output
         reparsed_string = xmlio.output(root)
