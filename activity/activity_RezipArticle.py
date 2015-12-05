@@ -1419,7 +1419,10 @@ class activity_RezipArticle(activity.activity):
 
             if int(doi_id) in [291,334,367,380,792,961,994,1684,4395,4493,5826,8811]:
                 root = self.fix_dodgy_reference_doi_in_xml(doi_id, root)
-                
+
+            # Fix contrib xref tags on two articles
+            if int(doi_id) in [1328,1816]:
+                root = self.fix_contrib_xref_conflict_in_xml(doi_id, root)
 
         # Start the file output
         reparsed_string = xmlio.output(root)
@@ -1465,6 +1468,15 @@ class activity_RezipArticle(activity.activity):
             for country_tag in aff_tag.findall('.//country'):
                 if country_tag.text.strip() == '':
                     country_tag.text = 'Germany' 
+
+        return root
+    
+    def fix_contrib_xref_conflict_in_xml(self, root):
+        """
+        
+        """
+        for xref_tag in root.findall('.//contrib/xref[@ref-type="conflict"]'):
+            xref_tag.set('ref-type', 'fn')
 
         return root
     
