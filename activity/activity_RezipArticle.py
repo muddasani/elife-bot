@@ -2143,10 +2143,10 @@ class activity_RezipArticle(activity.activity):
         for file_name in self.file_list(self.TMP_DIR):
             if file_name.endswith('.xml'):
                 return file_name
-        if not file_name:
-            for file_name in self.file_list(self.OUTPUT_DIR):
-                if file_name.endswith('.xml'):
-                    return file_name
+        
+        for file_name in self.file_list(self.OUTPUT_DIR):
+            if file_name.endswith('.xml'):
+                return file_name
             
         return file_name
     
