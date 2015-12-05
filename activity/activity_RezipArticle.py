@@ -104,6 +104,12 @@ class activity_RezipArticle(activity.activity):
         # Data passed to this activity
         elife_id = data["data"]["elife_id"]
         
+        # Skip articles right away
+        if int(elife_id) == 2516:
+            if(self.logger):
+                self.logger.info('skipping RezipArticle for: ' + str(elife_id))
+            return True
+        
         # Create output directories
         self.create_activity_directories()
 
