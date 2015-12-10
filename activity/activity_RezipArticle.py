@@ -32,6 +32,8 @@ from xml.etree.ElementTree import Element, SubElement
 
 import csv
 
+from keyword_replacements import keywords
+
 """
 RezipArticle activity
 """
@@ -1432,6 +1434,9 @@ class activity_RezipArticle(activity.activity):
             if int(doi_id) in [1328,1816]:
                 root = self.fix_contrib_xref_conflict_in_xml(root)
 
+        # Author keywords replacements
+        root = self.author_keyword_replacements_in_xml(doi_id, root)
+
         # Start the file output
         reparsed_string = xmlio.output(root)
 
@@ -1498,6 +1503,45 @@ class activity_RezipArticle(activity.activity):
 
         return root
     
+    def author_keyword_replacements_in_xml(self, doi_id, root):
+        """
+        Using a separate file of keyword matches and replacements,
+        match the lowercase version of the keyword, and if found
+        replace with one or more new keywords
+        """
+        
+        try:
+            for kwd_group_tag in root.findall('./front/article-meta/kwd-group[@kwd-group-type="author-keywords"]'):
+                for kwd_tag in kwd_group_tag.findall('.//kwd'):
+
+                    tagged_text = ElementTree.tostring(kwd_tag)
+                    tagged_text = tagged_text.replace('<kwd>','')
+                    tagged_text = tagged_text.replace('</kwd>','')
+                    # Remove extra whitespace
+                    tagged_text = tagged_text.rstrip()
+                    tagged_text = tagged_text.lower()
+                    
+                    if tagged_text in keywords.keys():
+                        # Do the replacements
+                        i = 0
+                        for new_keyword in keywords[tagged_text]:
+                            if i == 0:
+                                # Change text of the existing tag for the first replacement
+                                kwd_tag.text = new_keyword
+                            else:
+                                # More than one tag, append a new tag to the bottom
+                                new_kwd_tag = SubElement(kwd_group_tag, "kwd")
+                                new_kwd_tag.text = new_keyword
+                                
+                            i += 1
+
+        except:
+            if(self.logger):
+                self.logger.error('something went wrong in the author keywords replacements '
+                                  + doi_tag.text + ' in: ' + str(doi_id))
+                    
+        return root
+
     
     def fix_dodgy_reference_doi_in_xml(self, doi_id, root):
         """
