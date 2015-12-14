@@ -1428,7 +1428,7 @@ class activity_RezipArticle(activity.activity):
             if int(doi_id) == 51:
                 root = self.change_kwd_group_xml_00051(root)
 
-            if int(doi_id) in [291,334,367,380,792,961,994,1684,4395,4493,5826,8811]:
+            if int(doi_id) in [291,334,367,380,792,961,994,1684,4395,4493,5826,8811,10504]:
                 root = self.fix_dodgy_reference_doi_in_xml(doi_id, root)
 
             # Fix contrib xref tags on two articles
@@ -1578,6 +1578,8 @@ class activity_RezipArticle(activity.activity):
         doi_replacements['10.137/journal.pbio.1001424'] = '10.1371/journal.pbio.1001424'
         # 08811
         doi_replacements['E01-10-0089'] = '10.1091/mbc.E01-10-0089'
+        # 10504
+        doi_replacements['10.389/fmicb.2014.00717'] = '10.3389/fmicb.2014.00717'
         
         for citation_tag in root.findall('.//ref-list/ref/element-citation'):
             doi_tag = None
