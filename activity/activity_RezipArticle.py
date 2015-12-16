@@ -1144,8 +1144,14 @@ class activity_RezipArticle(activity.activity):
         if asset:
             new_filename = self.add_filename_asset(new_filename, asset, ordinal)
         
-        # Add version number and file extension
-        new_filename = self.add_filename_version(new_filename, version)
+        # Add version number
+        if asset and asset == 'media':
+            # Media video files, do not add version number
+            pass
+        else:
+            new_filename = self.add_filename_version(new_filename, version)
+        
+        # Add file extension
         new_filename += new_extension
     
         return new_filename
