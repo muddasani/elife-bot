@@ -1417,6 +1417,9 @@ class activity_RezipArticle(activity.activity):
                 
             if int(doi_id) in [2112]:
                 root = self.display_channel_short_report_in_xml(root)
+                
+            # Remove all author keywords from PoA files
+            root = self.delete_all_author_keywords_in_xml(doi_id, root)
             
         # VoR files
         if not parser.is_poa(soup):
@@ -1502,6 +1505,15 @@ class activity_RezipArticle(activity.activity):
             for subject_tag in subject_group_tag.findall('./subject'):
                 subject_tag.text = 'Short Report'
 
+        return root
+    
+    def delete_all_author_keywords_in_xml(self, doi_id, root):
+        """
+        For PoA XML we are removing all author keywords
+        """
+        for article_meta_tag in root.findall('./front/article-meta'):
+            for kwd_group_tag in article_meta_tag.findall('.//kwd-group[@kwd-group-type="author-keywords"]'):
+                article_meta_tag.remove(kwd_group_tag)
         return root
     
     def author_keyword_replacements_in_xml(self, doi_id, root):
