@@ -1443,6 +1443,9 @@ class activity_RezipArticle(activity.activity):
             # Fix contrib xref tags on two articles
             if int(doi_id) in [1328,1816]:
                 root = self.fix_contrib_xref_conflict_in_xml(root)
+                
+            # Rename video media file id attributes
+            root = self.change_media_video_id_in_xml(doi_id, root)
 
         # Author keywords replacements
         root = self.author_keyword_replacements_in_xml(doi_id, root)
@@ -1514,6 +1517,35 @@ class activity_RezipArticle(activity.activity):
             for subject_tag in subject_group_tag.findall('./subject'):
                 subject_tag.text = 'Short Report'
 
+        return root
+    
+    def change_media_video_id_in_xml(self, doi_id, root):
+        """
+        <media> tag id is changed,
+        as well need to change rid attribute of matching xref tags
+        """
+        id_map = {}
+        
+        for media_tag in root.findall('.//media'):
+            if media_tag.get('id'):
+                old_id = media_tag.get('id')
+                new_id = 'media' + str(re.sub('\D', '', old_id))
+                # Save to the id map
+                id_map[old_id] = new_id
+                # Change the media tag id
+                media_tag.set('id', new_id)
+                
+        # Change matching xref tags
+        for xref_tag in root.findall('.//xref'):
+            if xref_tag.get('rid'):
+                if xref_tag.get('rid') in id_map.keys():
+                    xref_tag.set('rid', id_map[xref_tag.get('rid')])
+                    
+        if len(id_map) > 0:
+            if(self.logger):
+                self.logger.error('media tag id replacements '
+                                  + json.dumps(id_map) + ' in: ' + str(doi_id))                
+        
         return root
     
     def delete_all_author_keywords_in_xml(self, doi_id, root):
