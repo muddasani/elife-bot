@@ -1601,7 +1601,7 @@ class activity_RezipArticle(activity.activity):
         
         """
         for kwd_tag in root.findall('./front/article-meta/kwd-group[@kwd-group-type="author-keywords"]/kwd'):
-            if '&#8211;' in kwd_tag.text:
+            if kwd_tag.text and '&#8211;' in kwd_tag.text:
                 kwd_tag.text = kwd_tag.text.replace('&#8211;', '-')
         return root
 
