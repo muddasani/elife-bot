@@ -1441,6 +1441,9 @@ class activity_RezipArticle(activity.activity):
         # Author keywords replacements
         root = self.author_keyword_replacements_in_xml(doi_id, root)
 
+        # Change &#8211; en-rule to hyphen
+        root = self.author_keyword_en_rule_in_xml(doi_id, root)
+
         # Start the file output
         reparsed_string = xmlio.output(root)
 
@@ -1553,6 +1556,15 @@ class activity_RezipArticle(activity.activity):
                 self.logger.error('something went wrong in the author keywords replacements '
                                   + doi_tag.text + ' in: ' + str(doi_id))
                     
+        return root
+
+    def author_keyword_en_rule_in_xml(self, doi_id, root):
+        """
+        
+        """
+        for kwd_tag in root.findall('./front/article-meta/kwd-group[@kwd-group-type="author-keywords"]/kwd'):
+            if '&#8211;' in kwd_tag.text:
+                kwd_tag.text = kwd_tag.text.replace('&#8211;', '-')
         return root
 
     
