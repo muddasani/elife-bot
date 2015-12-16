@@ -1543,7 +1543,7 @@ class activity_RezipArticle(activity.activity):
                     
         if len(id_map) > 0:
             if(self.logger):
-                self.logger.error('media tag id replacements '
+                self.logger.info('media tag id replacements '
                                   + json.dumps(id_map) + ' in: ' + str(doi_id))                
         
         return root
