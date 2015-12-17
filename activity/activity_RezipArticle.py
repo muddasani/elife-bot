@@ -1538,8 +1538,12 @@ class activity_RezipArticle(activity.activity):
         # Change matching xref tags
         for xref_tag in root.findall('.//xref'):
             if xref_tag.get('rid'):
-                if xref_tag.get('rid') in id_map.keys():
-                    xref_tag.set('rid', id_map[xref_tag.get('rid')])
+                # Some rid values may have more than one id separated by a space
+                rids = xref_tag.get('rid').split(' ')
+                for rid in rids:
+                    if rid in id_map.keys():
+                        rid = id_map[rid]
+                xref_tag.set('rid') = ' '.join(rids)
                     
         if len(id_map) > 0:
             if(self.logger):
