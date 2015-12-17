@@ -1540,9 +1540,9 @@ class activity_RezipArticle(activity.activity):
             if xref_tag.get('rid'):
                 # Some rid values may have more than one id separated by a space
                 rids = xref_tag.get('rid').split(' ')
-                for rid in rids:
+                for i, rid in enumerate(rids):
                     if rid in id_map.keys():
-                        rid = id_map[rid]
+                        rids[i] = id_map[rid]
                 xref_tag.set('rid', ' '.join(rids))
                     
         if len(id_map) > 0:
