@@ -1543,7 +1543,7 @@ class activity_RezipArticle(activity.activity):
                 for rid in rids:
                     if rid in id_map.keys():
                         rid = id_map[rid]
-                xref_tag.set('rid') = ' '.join(rids)
+                xref_tag.set('rid', ' '.join(rids))
                     
         if len(id_map) > 0:
             if(self.logger):
