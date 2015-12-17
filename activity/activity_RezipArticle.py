@@ -1360,6 +1360,9 @@ class activity_RezipArticle(activity.activity):
         
         root = xmlio.parse(xml_file)
         
+        # Set graphic file extensions
+        root = self.add_graphic_file_extensions_in_xml(doi_id, root)
+        
         # Convert xlink href values
         total = xmlio.convert_xlink_href(root, file_name_map)
         # TODO - compare whether all file names were converted
@@ -1497,6 +1500,23 @@ class activity_RezipArticle(activity.activity):
             for country_tag in aff_tag.findall('.//country'):
                 if country_tag.text.strip() == '':
                     country_tag.text = 'Germany' 
+
+        return root
+    
+    def add_graphic_file_extensions_in_xml(self, doi_id, root):
+        """
+        
+        """
+        for tag in root.findall('.//graphic'):
+            href = tag.get('{http://www.w3.org/1999/xlink}href')
+            if href and len(href.split('.')) <= 1:
+                extension = '.tif'
+                if int(doi_id) == 2020 or int(doi_id) == 3318:
+                    # TODO - special case to add .gif to animated gifs
+                    pass
+                
+                # Add the file extension
+                tag.set('{http://www.w3.org/1999/xlink}href', href + extension)
 
         return root
     
