@@ -78,6 +78,9 @@ class activity_RezipArticle(activity.activity):
         self.eps_output_bucket_folder = ""
         self.tif_resolution = 600
         
+        # Animated gif file bucket
+        self.gif_output_bucket = "elife-gif-renamed"
+        
         # Temporary detail of files from the zip files to an append log
         self.zip_file_contents_log_name = "rezip_article_zip_file_contents.txt"
         
@@ -137,6 +140,9 @@ class activity_RezipArticle(activity.activity):
             self.rezip_article_folders()
     
             (fid, status, version) = self.profile_article(self.INPUT_DIR, folder)
+            
+            # Download animated .gif files for articles if applicable
+            self.download_and_replace_tif_with_gif(fid, version, status)
             
             # Rename the files
             file_name_map = self.rename_files(self.journal, fid, status,
@@ -750,16 +756,62 @@ class activity_RezipArticle(activity.activity):
         
         return file_name_map
     
+    def download_and_replace_tif_with_gif(self, doi_id, version, status):
+        """
+        
+        """
+        
+        if int(doi_id) not in [2020,3318]:
+            return
+        
+        self.download_gif_files_from_s3(doi_id)
+        
+        # Move GIF files from INPUT_DIR to TMP_DIR
+        subfolder_name = str(doi_id).zfill(5)
+        input_dir_subfolder_name = self.INPUT_DIR + os.sep + subfolder_name
+        
+        for file in self.file_list(input_dir_subfolder_name):
+            if file.split('.')[-1] == 'gif':
+                filename = self.file_name_from_name(file)
+                shutil.move(file, self.TMP_DIR + os.sep + filename)
+
+        old_tifs = []
+        if int(doi_id) == 3318:
+            old_tifs = ["elife03318f005.tif", "elife03318f006.tif",
+                        "elife03318f007.tif", "elife03318f008.tif",
+                        "elife03318f009.tif", "elife03318f010.tif",
+                        "elife03318f011.tif", "elife03318f012.tif",
+                        "elife03318f013.tif", "elife03318f014.tif",
+                        "elife03318f015.tif", "elife03318f016.tif"]
+        
+        # Delete unwanted files
+        for file in self.file_list(self.TMP_DIR):
+            if self.file_name_from_name(file) in old_tifs:
+                filename = self.file_name_from_name(file)
+
+                if(self.logger):
+                    self.logger.info('moving file to junk dir ' + filename)
+                    shutil.move(file, self.JUNK_DIR + os.sep + filename)
+
+
+    
+    
     def download_tif_files_from_s3(self, doi_id):
+        self.download_replacement_files_from_s3(doi_id, 'TIF', self.eps_output_bucket)
+        
+    def download_gif_files_from_s3(self, doi_id):
+        self.download_replacement_files_from_s3(doi_id, 'GIF', self.gif_output_bucket)
+    
+    def download_replacement_files_from_s3(self, doi_id, type, bucket_name):
         if(self.logger):
-            self.logger.info('downloading TIF files for doi ' + str(doi_id))
+            self.logger.info('downloading ' + str(type) + ' files for doi ' + str(doi_id))
         
         subfolder_name = str(doi_id).zfill(5)
         prefix = subfolder_name + '/'
         
         # Connect to S3 and bucket
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
-        bucket = s3_conn.lookup(self.eps_output_bucket)
+        bucket = s3_conn.lookup(bucket_name)
 
         # get item list from S3
         s3_key_names = s3lib.get_s3_key_names_from_bucket(
@@ -1512,8 +1564,19 @@ class activity_RezipArticle(activity.activity):
             if href and len(href.split('.')) <= 1:
                 extension = '.tif'
                 if int(doi_id) == 2020 or int(doi_id) == 3318:
-                    # TODO - special case to add .gif to animated gifs
-                    pass
+                    # 02020
+                    gifs_02020 = []
+                    
+                    # 03318
+                    gifs_03318 = ["elife03318f005", "elife03318f006",
+                                    "elife03318f007", "elife03318f008",
+                                    "elife03318f009", "elife03318f010",
+                                    "elife03318f011", "elife03318f012",
+                                    "elife03318f013", "elife03318f014",
+                                    "elife03318f015", "elife03318f016"]
+                    if href in gifs_03318 or href in gifs_02020:
+                        extension = '.gif'
+
                 
                 # Add the file extension
                 tag.set('{http://www.w3.org/1999/xlink}href', href + extension)
