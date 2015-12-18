@@ -783,6 +783,8 @@ class activity_RezipArticle(activity.activity):
                         "elife03318f011.tif", "elife03318f012.tif",
                         "elife03318f013.tif", "elife03318f014.tif",
                         "elife03318f015.tif", "elife03318f016.tif"]
+        if int(doi_id) == 2020:
+            old_tifs = ["elife02020f002.tif"]
         
         # Delete unwanted files
         for file in self.file_list(self.TMP_DIR):
@@ -1565,7 +1567,7 @@ class activity_RezipArticle(activity.activity):
                 extension = '.tif'
                 if int(doi_id) == 2020 or int(doi_id) == 3318:
                     # 02020
-                    gifs_02020 = []
+                    gifs_02020 = ["elife02020f002"]
                     
                     # 03318
                     gifs_03318 = ["elife03318f005", "elife03318f006",
