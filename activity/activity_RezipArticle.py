@@ -440,6 +440,7 @@ class activity_RezipArticle(activity.activity):
                    (int(doi_id) == 3671 and version == 1) or
                    (int(doi_id) == 6845 and version == 2) or
                    (int(doi_id) == 2478 and version == 2) or
+                   (int(doi_id) == 9123 and version == 2) or
                    (int(doi_id) == 11190) or
                    (int(doi_id) == 7116)    ):
                     continue
