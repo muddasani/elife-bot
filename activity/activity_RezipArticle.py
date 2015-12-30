@@ -485,7 +485,10 @@ class activity_RezipArticle(activity.activity):
             pass
         else:
             self.download_poa_ds_zip_for_previous_version(doi_id, version, bucket, subfolder_name)
-            
+        
+        # Check for empty or malformed ds.zip files
+        self.remove_malformed_poa_ds_zip_files(doi_id, subfolder_name)
+        
         # Edge case for article 04493
         if int(doi_id) == 4493:
             self.download_extra_poa_files_for_4493(doi_id, version, subfolder_name)
@@ -562,6 +565,69 @@ class activity_RezipArticle(activity.activity):
                 
                 self.download_s3_key_names_to_subfolder(bucket, ds_zip_key_names, subfolder_name)
                 prev_version = 0
+    
+    def remove_malformed_poa_ds_zip_files(self, doi_id, subfolder_name):
+        
+        file_dir = (self.INPUT_DIR + os.sep + subfolder_name)
+        
+        file_path = None
+        filename = None
+        
+        # For PoA files there should be only one zip file, the ds.zip file
+        for file in self.file_list(file_dir):
+            if file.split('.')[-1] == 'zip':
+                file_path = file
+        
+        if file_path:
+            badfile = None
+
+            filename = self.file_name_from_name(file_path)
+
+            # Check for bad files
+            try:
+                current_zipfile = zipfile.ZipFile(file_path, 'r')
+            except:
+                badfile = True
+                current_zipfile = None
+
+            if current_zipfile:
+    
+                # Check for those with no zipped folder contents
+                if self.check_empty_supplemental_files(current_zipfile) is not True:
+                    badfile = True
+                
+                current_zipfile.close()
+            
+            if badfile:
+                # File is not good, move it somewhere
+                if(self.logger):
+                    self.logger.info('moving poa ds zip file to junk dir ' + filename)
+                shutil.move(file_path, self.JUNK_DIR + os.sep + filename)
+    
+    def check_empty_supplemental_files(self, input_zipfile):
+        """
+        Given a zipfile.ZipFile object, look inside the internal zipped folder
+        and asses the zipextfile object length to see whether it is empty
+        """
+        zipextfile_line_count = 0
+        sub_folder_name = None
+    
+        for name in input_zipfile.namelist():
+            if re.match("^.*\.zip$", name):
+                sub_folder_name = name
+                
+        if sub_folder_name:
+            zipextfile = input_zipfile.open(sub_folder_name)
+        
+            while zipextfile.readline():
+                zipextfile_line_count += 1
+
+        # Empty subfolder zipextfile object will have only 1 line
+        #  Non-empty file will have more than 1 line
+        if zipextfile_line_count <= 1:
+            return False
+        elif zipextfile_line_count > 1:
+            return True
     
     def ds_zip_file_name_from_list(self, s3_key_names):
         """
