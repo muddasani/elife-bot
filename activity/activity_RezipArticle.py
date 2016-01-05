@@ -1897,7 +1897,7 @@ class activity_RezipArticle(activity.activity):
         """
         Dodgy ORCID on at least one article contrib
         """
-        for tag in root.findall('.//contrib[@contrib-id="orcid"]'): 
+        for tag in root.findall('.//contrib/contrib-id[@contrib-id-type="orcid"]'): 
             if tag.text == '0000-0002-8640-4318':
                 tag.text = 'http://orcid.org/' + tag.text
         return root
