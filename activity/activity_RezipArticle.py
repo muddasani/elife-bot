@@ -54,6 +54,7 @@ class activity_RezipArticle(activity.activity):
         # Bucket settings
         self.article_bucket = settings.bucket
         self.poa_bucket = settings.poa_packaging_bucket
+        self.ppp_input_bucket = settings.publishing_buckets_prefix + settings.production_bucket
         
         # Bucket settings
         self.article_bucket = settings.bucket
@@ -670,17 +671,61 @@ class activity_RezipArticle(activity.activity):
                 if(self.logger):
                     self.logger.info('ignoring VoR file elife00776.xml for doi ' + str(doi_id))
         
-        """
+        # Repackage the PPP zip file format, if applicable
+        if len(s3_key_names) <= 0:
+            # Try the ppp input bucket
+            
+            # Connect to S3 and bucket
+            s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
+            bucket = s3_conn.lookup(self.ppp_input_bucket)
+            
+            all_s3_key_names = s3lib.get_s3_key_names_from_bucket(bucket = bucket)
+            s3_key_names = []
+            
+            zip_s3_key_name = self.latest_revision_zip_key_name(all_s3_key_names, doi_id, 'vor')
+            if zip_s3_key_name:
+                s3_key_names.append(zip_s3_key_name)
+
         # During development, turn this on to download the xml only so it is quicker
         for name in s3_key_names:
             if "xml" in name:
                 xml_s3_key_names = [name]
         s3_key_names = xml_s3_key_names
-        """
+        
    
         self.download_s3_key_names_to_subfolder(bucket, s3_key_names, subfolder_name)
         
+    def latest_revision_zip_key_name(self, s3_key_names, doi_id, status = 'vor'):
+        """
+        Given a list of s3 bucket object names (with no subfolder)
+        a doi_id and a status of 'vor' or 'poa',
+        Then find the zip file for the most recent revision
+        """
+        zip_s3_key_name = None
         
+        # Find the latest revision zip file for this article
+        name_prefix = 'elife-' + str(doi_id).zfill(5) + '-' + status + '-r'
+        max_revision = None
+        
+        for key_name in s3_key_names:
+
+            if name_prefix in key_name:
+                # Look for the max revision number of all zip files for this article
+                revision = None
+                
+                try:
+                    part = key_name.replace(name_prefix, '')
+                    revision = int(part.split('.')[0])
+                except:
+                    pass
+                if ( (revision and not max_revision) or
+                     (revision and max_revision and revision > max_revision)):
+                    max_revision = revision
+        
+        if max_revision:
+            zip_s3_key_name = name_prefix + str(max_revision) + '.zip'
+                
+        return zip_s3_key_name
         
     def download_s3_key_names_to_subfolder(self, bucket, s3_key_names, subfolder_name):
         
@@ -1063,6 +1108,9 @@ class activity_RezipArticle(activity.activity):
         # Check for PoA DS files
         if self.is_poa_ds_file(file_name):
             return True
+        # Check for new style PPP zip files
+        if '-vor-' in file_name:
+            return True
         
         # Default
         return False
@@ -1154,7 +1202,8 @@ class activity_RezipArticle(activity.activity):
         if old_filename.endswith('.xml'):
             # Confirm it is the article XML file
             if (old_filename == 'elife' + str(fid).zfill(5) + '.xml'
-                or old_filename.startswith('elife_poa_e' + str(fid).zfill(5))):
+                or old_filename.startswith('elife_poa_e' + str(fid).zfill(5))
+                or old_filename == 'elife-' + str(fid).zfill(5) + '.xml'):
                 new_filename = journal
                 new_filename = self.add_filename_fid(new_filename, fid)
                 new_filename = self.add_filename_version(new_filename, version)
@@ -1164,7 +1213,8 @@ class activity_RezipArticle(activity.activity):
             # Confirm it is the article PDF file or figures PDF
             if (old_filename == 'elife' + str(fid).zfill(5) + '.pdf'
                 or old_filename.startswith('decap_elife_poa_e' + str(fid).zfill(5))
-                or old_filename == 'elife' + str(fid).zfill(5) + '-figures.pdf'):
+                or old_filename == 'elife' + str(fid).zfill(5) + '-figures.pdf'
+                or old_filename == 'elife-' + str(fid).zfill(5) + '-figures.pdf'):
                 new_filename = journal
                 new_filename = self.add_filename_fid(new_filename, fid)
                 if 'figures' in old_filename:
