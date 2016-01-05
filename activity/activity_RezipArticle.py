@@ -1618,6 +1618,9 @@ class activity_RezipArticle(activity.activity):
             if int(doi_id) in [291,334,367,380,792,961,994,1684,4395,4493,5826,8811,10504]:
                 root = self.fix_dodgy_reference_doi_in_xml(doi_id, root)
 
+            if int(doi_id) in [9571]:
+                root = self.fix_dodgy_orcid_in_xml(doi_id, root)
+
             # Fix contrib xref tags on two articles
             if int(doi_id) in [1328,1816]:
                 root = self.fix_contrib_xref_conflict_in_xml(root)
@@ -1888,6 +1891,15 @@ class activity_RezipArticle(activity.activity):
                     for source_tag in citation_tag.findall('.//source'):
                         source_tag.text = 'RNA'
                 
+        return root
+
+    def fix_dodgy_orcid_in_xml(self, doi_id, root):
+        """
+        Dodgy ORCID on at least one article contrib
+        """
+        for tag in root.findall('.//contrib[@contrib-id="orcid"]'): 
+            if tag.text == '0000-0002-8640-4318':
+                tag.text = 'http://orcid.org/' + tag.text
         return root
 
     def remove_tag_from_tag_in_xml(self, parent_tag, tag_name):
