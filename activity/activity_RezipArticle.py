@@ -687,10 +687,12 @@ class activity_RezipArticle(activity.activity):
                 s3_key_names.append(zip_s3_key_name)
 
         # During development, turn this on to download the xml only so it is quicker
+        """
         for name in s3_key_names:
             if "xml" in name:
                 xml_s3_key_names = [name]
         s3_key_names = xml_s3_key_names
+        """
         
    
         self.download_s3_key_names_to_subfolder(bucket, s3_key_names, subfolder_name)
