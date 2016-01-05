@@ -684,6 +684,8 @@ class activity_RezipArticle(activity.activity):
             
             zip_s3_key_name = self.latest_revision_zip_key_name(all_s3_key_names, doi_id, 'vor')
             if zip_s3_key_name:
+                if(self.logger):
+                    self.logger.info('downloading VoR zip in PPP format from ' + str(zip_s3_key_name))
                 s3_key_names.append(zip_s3_key_name)
 
         # During development, turn this on to download the xml only so it is quicker
