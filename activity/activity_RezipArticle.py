@@ -1698,7 +1698,11 @@ class activity_RezipArticle(activity.activity):
         for tag in root.findall('.//graphic'):
             href = tag.get('{http://www.w3.org/1999/xlink}href')
             if href and len(href.split('.')) <= 1:
-                extension = '.tif'
+                
+                # Default extension
+                # extension = '.tif'
+                extension = ''
+                
                 if int(doi_id) == 2020 or int(doi_id) == 3318:
                     # 02020
                     gifs_02020 = ["elife02020f002"]
