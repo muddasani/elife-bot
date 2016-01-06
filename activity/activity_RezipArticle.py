@@ -571,6 +571,15 @@ class activity_RezipArticle(activity.activity):
         
         file_dir = (self.INPUT_DIR + os.sep + subfolder_name)
         
+        # If the PoA directory does not exist, then return now
+        #  bad data in the buckets make some articles look like they have a PoA but they do not
+        try:
+            dummy_file_list = self.file_list(file_dir)
+        except:
+            return
+        
+        # Continue
+        
         file_path = None
         filename = None
         
