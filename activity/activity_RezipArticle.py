@@ -1700,8 +1700,8 @@ class activity_RezipArticle(activity.activity):
             if href and len(href.split('.')) <= 1:
                 
                 # Default extension
-                # extension = '.tif'
-                extension = ''
+                extension = '.tif'
+                # extension = ''
                 
                 if int(doi_id) == 2020 or int(doi_id) == 3318:
                     # 02020
