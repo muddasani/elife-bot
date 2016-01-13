@@ -1565,7 +1565,7 @@ class activity_RezipArticle(activity.activity):
         root = self.element_citation_collab_wrap_in_xml(root)
         
         # Remove related-article tag id attributes
-        root = self.related_article_convert_in_xml(root)
+        #root = self.related_article_convert_in_xml(root)
 
         # Remove university from institution tags
         root = self.institution_university_convert_in_xml(root)
