@@ -1546,12 +1546,12 @@ class activity_RezipArticle(activity.activity):
         
         root = xmlio.parse(xml_file)
         
-        # Set graphic file extensions
-        root = self.add_graphic_file_extensions_in_xml(doi_id, root)
-        
         # Convert xlink href values
         total = xmlio.convert_xlink_href(root, file_name_map)
         # TODO - compare whether all file names were converted
+        
+        # Set graphic file extensions
+        root = self.add_graphic_file_extensions_in_xml(doi_id, root)
         
         # Update or change JATS dtd-schema version
         self.dtd_version_to_xml(root)
