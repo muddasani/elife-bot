@@ -2208,6 +2208,9 @@ class activity_RezipArticle(activity.activity):
         ignore_words = ['and']
         word_list = string.split(' ')
         for i, word in enumerate(word_list):
+            # Skip if the word is all capital letters
+            if word == word.upper():
+                continue
             if word.lower() not in ignore_words:
                 word_list[i] = word.capitalize()
         return ' '.join(word_list)
