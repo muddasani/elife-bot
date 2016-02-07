@@ -1626,7 +1626,7 @@ class activity_RezipArticle(activity.activity):
             if int(doi_id) == 51:
                 root = self.change_kwd_group_xml_00051(root)
 
-            if int(doi_id) in [291,334,367,380,792,961,994,1684,4395,4493,5826,8811,10504]:
+            if int(doi_id) in [291,334,367,380,792,961,994,1684,4395,4493,5826,8811,10504,13367]:
                 root = self.fix_dodgy_reference_doi_in_xml(doi_id, root)
 
             if int(doi_id) in [9571]:
@@ -1905,6 +1905,10 @@ class activity_RezipArticle(activity.activity):
                 if (int(doi_id) == 994 and doi_tag.text == '10.1017/S1355838201011074'):
                     for source_tag in citation_tag.findall('.//source'):
                         source_tag.text = 'RNA'
+                
+                # Remove private / hidden character at the end of the value
+                if (int(doi_id) == 13367 and doi_tag.text.startswith('10.7554/eLife.10566'):
+                    doi_tag.text = '10.7554/eLife.10566'
                 
         return root
 
