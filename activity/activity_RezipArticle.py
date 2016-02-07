@@ -1907,7 +1907,7 @@ class activity_RezipArticle(activity.activity):
                         source_tag.text = 'RNA'
                 
                 # Remove private / hidden character at the end of the value
-                if (int(doi_id) == 13367 and doi_tag.text.startswith('10.7554/eLife.10566'):
+                if (int(doi_id) == 13367 and doi_tag.text.startswith('10.7554/eLife.10566')):
                     doi_tag.text = '10.7554/eLife.10566'
                 
         return root
