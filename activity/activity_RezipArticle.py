@@ -55,6 +55,7 @@ class activity_RezipArticle(activity.activity):
         self.article_bucket = settings.bucket
         self.poa_bucket = settings.poa_packaging_bucket
         self.ppp_input_bucket = settings.publishing_buckets_prefix + settings.production_bucket
+        self.ppp_input_bucket_folder = None
         
         # Bucket settings
         self.article_bucket = settings.bucket
@@ -689,10 +690,15 @@ class activity_RezipArticle(activity.activity):
             s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
             bucket = s3_conn.lookup(self.ppp_input_bucket)
             
-            all_s3_key_names = s3lib.get_s3_key_names_from_bucket(bucket = bucket)
+            if self.ppp_input_bucket_folder:
+                prefix = self.ppp_input_bucket_folder
+            else:
+                prefix = None
+            
+            all_s3_key_names = s3lib.get_s3_key_names_from_bucket(bucket = bucket, prefix = prefix)
             s3_key_names = []
             
-            zip_s3_key_name = self.latest_revision_zip_key_name(all_s3_key_names, doi_id, 'vor')
+            zip_s3_key_name = self.latest_revision_zip_key_name(all_s3_key_names, doi_id, 'vor', prefix)
             if zip_s3_key_name:
                 if(self.logger):
                     self.logger.info('downloading VoR zip in PPP format from ' + str(zip_s3_key_name))
@@ -709,7 +715,7 @@ class activity_RezipArticle(activity.activity):
    
         self.download_s3_key_names_to_subfolder(bucket, s3_key_names, subfolder_name)
         
-    def latest_revision_zip_key_name(self, s3_key_names, doi_id, status = 'vor'):
+    def latest_revision_zip_key_name(self, s3_key_names, doi_id, status = 'vor', prefix = None):
         """
         Given a list of s3 bucket object names (with no subfolder)
         a doi_id and a status of 'vor' or 'poa',
@@ -719,6 +725,8 @@ class activity_RezipArticle(activity.activity):
         
         # Find the latest revision zip file for this article
         name_prefix = 'elife-' + str(doi_id).zfill(5) + '-' + status + '-r'
+        if prefix:
+            name_prefix = prefix + name_prefix
         max_revision = None
         
         for key_name in s3_key_names:
