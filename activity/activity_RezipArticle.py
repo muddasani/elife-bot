@@ -1706,15 +1706,15 @@ class activity_RezipArticle(activity.activity):
                 
                 if int(doi_id) == 2020 or int(doi_id) == 3318:
                     # 02020
-                    gifs_02020 = ["elife02020f002"]
+                    gifs_02020 = ["elife-02020-fig2-v1"]
                     
                     # 03318
-                    gifs_03318 = ["elife03318f005", "elife03318f006",
-                                    "elife03318f007", "elife03318f008",
-                                    "elife03318f009", "elife03318f010",
-                                    "elife03318f011", "elife03318f012",
-                                    "elife03318f013", "elife03318f014",
-                                    "elife03318f015", "elife03318f016"]
+                    gifs_03318 = ["elife-03318-fig2-v1", "elife-03318-fig3-v1",
+                                  "elife-03318-fig4-v1", "elife-03318-fig5-v1",
+                                  "elife-03318-fig6-v1", "elife-03318-fig7-v1",
+                                  "elife-03318-fig9-v1", "elife-03318-fig10-v1",
+                                  "elife-03318-fig11-v1", "elife-03318-fig12-v1",
+                                  "elife-03318-fig13-v1", "elife-03318-fig15-v1"]
                     if href in gifs_03318 or href in gifs_02020:
                         extension = '.gif'
 
