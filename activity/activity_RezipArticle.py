@@ -95,7 +95,7 @@ class activity_RezipArticle(activity.activity):
             self.simpledb_domain_name = "POAFile"
         
         # Article dates data
-        self.article_dates_csv_url = 'http://elifesciences.org/elife/article-dates.csv'
+        self.article_dates_csv_url = 'https://s3.amazonaws.com/elife-articles-renamed/article-dates.csv'
         self.article_dates_csv = 'article-dates.csv'
         
         # journal
