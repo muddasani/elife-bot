@@ -54,8 +54,10 @@ class activity_RezipArticle(activity.activity):
         # Bucket settings
         self.article_bucket = settings.bucket
         self.poa_bucket = settings.poa_packaging_bucket
-        self.ppp_input_bucket = settings.publishing_buckets_prefix + settings.production_bucket
-        self.ppp_input_bucket_folder = None
+        #self.ppp_input_bucket = settings.publishing_buckets_prefix + settings.production_bucket
+        #self.ppp_input_bucket_folder = None
+        self.ppp_input_bucket = "elife-eps-renamed"
+        self.ppp_input_bucket_folder = "silent_corrections/"
         
         # Bucket settings
         self.article_bucket = settings.bucket
@@ -72,7 +74,9 @@ class activity_RezipArticle(activity.activity):
         # Bucket settings
         self.output_bucket = "elife-articles-renamed"
         # Temporarily upload to a folder during development
-        self.output_bucket_folder = "samples06/"
+        #self.output_bucket_folder = "samples06/"
+        #self.output_article_xml_bucket_folder = "samples06/article-xml/"
+        self.output_bucket_folder = "samples07/"
         self.output_article_xml_bucket_folder = "samples06/article-xml/"
         
         # EPS file bucket
