@@ -1569,7 +1569,7 @@ class activity_RezipArticle(activity.activity):
         self.dtd_version_to_xml(root)
         
         # Capitalise subject group values in article categories
-        root = self.subject_group_convert_in_xml(root)
+        #root = self.subject_group_convert_in_xml(root)
         
         # Convert research organism kwd tags
         root = self.research_organism_kwd_convert_in_xml(root, doi_id)
