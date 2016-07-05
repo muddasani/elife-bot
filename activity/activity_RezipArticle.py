@@ -666,6 +666,7 @@ class activity_RezipArticle(activity.activity):
         subfolder_name = str(doi_id).zfill(5)
         prefix = subfolder_name + '/'
         
+        """
         # Connect to S3 and bucket
         s3_conn = S3Connection(self.settings.aws_access_key_id, self.settings.aws_secret_access_key)
         bucket = s3_conn.lookup(self.article_bucket)
@@ -685,7 +686,8 @@ class activity_RezipArticle(activity.activity):
                 s3_key_names.remove(name)
                 if(self.logger):
                     self.logger.info('ignoring VoR file elife00776.xml for doi ' + str(doi_id))
-        
+        """
+        s3_key_names = []
         # Repackage the PPP zip file format, if applicable
         if len(s3_key_names) <= 0:
             # Try the ppp input bucket
