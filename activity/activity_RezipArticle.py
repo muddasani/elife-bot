@@ -1346,7 +1346,14 @@ class activity_RezipArticle(activity.activity):
         # Add version number
         if asset and asset == 'media':
             # Media video files, do not add version number
-            pass
+                    
+            # For use in silent correction processing, do not rename media files
+            #  due to a problem with 14093 that has videos inside an app tag
+            #  the parent is not getting picked up properly
+
+            #pass
+            return old_filename
+
         else:
             new_filename = self.add_filename_version(new_filename, version)
         
@@ -1651,7 +1658,7 @@ class activity_RezipArticle(activity.activity):
                 root = self.fix_contrib_xref_conflict_in_xml(root)
                 
             # Rename video media file id attributes
-            root = self.change_media_video_id_in_xml(doi_id, root)
+            #root = self.change_media_video_id_in_xml(doi_id, root)
 
         # Author keywords replacements
         root = self.author_keyword_replacements_in_xml(doi_id, root)
