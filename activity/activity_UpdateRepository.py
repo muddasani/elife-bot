@@ -4,7 +4,8 @@ from boto.s3.connection import S3Connection
 import tempfile
 from github import Github
 from github import GithubException
-import provider.lax_provider as lax_provider
+from provider import lax_provider
+from provider.storage_provider import StorageContext
 
 """
 activity_UpdateRepository.py activity
@@ -58,20 +59,13 @@ class activity_UpdateRepository(activity.activity):
                                                           data['version'])
                 s3_file_path = data['article_id'] + "/" + xml_file
 
-                #connect to bucket
-                self.conn = S3Connection(self.settings.aws_access_key_id,
-                                     self.settings.aws_secret_access_key,
-                                     host=self.settings.s3_hostname)
-                bucket = self.conn.get_bucket(self.settings.publishing_buckets_prefix +
-                                          self.settings.ppp_cdn_bucket)
+                storage = StorageContext(self.settings)
+                bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
 
                 #download xml
                 with tempfile.TemporaryFile(mode='r+') as tmp:
-
-                    s3_key = bucket.get_key(s3_file_path)
+                    file_content = storage.get_resource_as_string("s3://%s/%s" % (bucket_name, s3_file_path))
                     filename = s3_file_path.split('/')[-1]
-                    s3_key.get_contents_to_file(tmp)
-                    file_content = s3_key.get_contents_as_string()
                     message = self.update_github(self.settings.git_repo_path + filename, file_content)
 
                     self.logger.info(message)
