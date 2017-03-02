@@ -5,7 +5,7 @@ import tempfile
 from github import Github
 from github import GithubException
 import provider
-from provider.storage_provider import StorageContext
+from provider.storage_provider import storage_context
 
 """
 activity_UpdateRepository.py activity
@@ -59,7 +59,7 @@ class activity_UpdateRepository(activity.activity):
                                                           data['version'])
                 s3_file_path = data['article_id'] + "/" + xml_file
 
-                storage = StorageContext(self.settings)
+                storage = storage_context(self.settings)
                 bucket_name = self.settings.publishing_buckets_prefix + self.settings.ppp_cdn_bucket
 
                 #download xml
